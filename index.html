@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/nocturne-f39b7ecd-4fa1-4949-b43b-fcab6a117040/styles.css">
+<script src="_ds/nocturne-f39b7ecd-4fa1-4949-b43b-fcab6a117040/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #08080A; color: #F2F2F4; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: #F0113A; text-decoration: none; }
+  a:hover { color: #FF4A68; }
+  ::selection { background: #F0113A; color: #fff; }
+  *:focus-visible { outline: 2px solid #F0113A; outline-offset: 3px; }
+  @keyframes tr-ticker { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
+  @keyframes tr-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+  @keyframes tr-bar { 0%,100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; } }
+</style>
+</helmet>
+
+<div style="background:#08080A;min-height:100vh;font-family:Inter,system-ui,sans-serif">
+
+  <header style="position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px clamp(14px,3vw,40px);background:rgba(8,8,10,.82);backdrop-filter:blur(14px);border-bottom:1px solid rgba(240,17,58,.22)">
+    <a href="#inicio" style="display:flex;align-items:center;gap:12px;min-width:0">
+      <video ref="{{ logoVideoRef }}" src="uploads/rememberos-todo.mp4" poster="logo.png" autoPlay="{{ true }}" loop="{{ true }}" muted="{{ true }}" playsInline="{{ true }}" aria-label="Rememberos Hasta la Médula" style="width:50px;height:50px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:#08080A;box-shadow:0 0 0 1px rgba(255,255,255,.14),0 0 24px rgba(240,17,58,.35)"></video>
+      <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(11px,1.5vw,14px);line-height:1.05;letter-spacing:.06em;text-transform:uppercase;color:#F2F2F4;max-width:140px">Rememberos<br>Hasta la Médula</span>
+    </a>
+
+    <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+      <nav style="display:flex;align-items:center;gap:clamp(18px,3vw,40px)">
+        <a href="#inicio" style="font-family:Archivo,sans-serif;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#F2F2F4" style-hover="color:#F0113A">Inicio</a>
+        <a href="#entradas" style="font-family:Archivo,sans-serif;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#F2F2F4" style-hover="color:#F0113A">Entradas</a>
+        <a href="#artistas" style="font-family:Archivo,sans-serif;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#F2F2F4" style-hover="color:#F0113A">Artistas</a>
+        <a href="#info" style="font-family:Archivo,sans-serif;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#F2F2F4" style-hover="color:#F0113A">Info</a>
+      </nav>
+    </sc-if>
+
+    <div style="display:flex;align-items:center;gap:10px;flex:0 0 auto">
+      <a href="#entradas" style="display:inline-flex;align-items:center;height:44px;padding:0 22px;border-radius:999px;background:#F0113A;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 0 28px rgba(240,17,58,.45)" style-hover="background:#FF3355">Comprar entradas</a>
+      <sc-if value="{{ isCompact }}" hint-placeholder-val="{{ false }}">
+        <button type="button" onClick="{{ toggleMenu }}" aria-label="Menú" style="width:46px;height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);cursor:pointer" style-hover="border-color:#F0113A">
+          <span style="display:block;width:20px;height:2px;background:#F2F2F4"></span>
+          <span style="display:block;width:20px;height:2px;background:#F2F2F4"></span>
+          <span style="display:block;width:20px;height:2px;background:#F0113A"></span>
+        </button>
+      </sc-if>
+    </div>
+  </header>
+
+  <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:70;background:#08080A;display:flex;flex-direction:column;padding:16px clamp(16px,5vw,40px) 40px">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:70px">
+        <video ref="{{ logoVideoRef2 }}" src="uploads/rememberos-todo.mp4" poster="logo.png" autoPlay="{{ true }}" loop="{{ true }}" muted="{{ true }}" playsInline="{{ true }}" aria-label="" style="width:50px;height:50px;border-radius:50%;object-fit:cover;background:#08080A"></video>
+        <button type="button" onClick="{{ closeMenu }}" aria-label="Cerrar" style="width:46px;height:46px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:#F2F2F4;font-size:22px;line-height:1;cursor:pointer">×</button>
+      </div>
+      <nav style="display:flex;flex-direction:column;gap:6px;margin-top:8vh">
+        <a href="#inicio" onClick="{{ closeMenu }}" style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(34px,11vw,56px);line-height:1.1;letter-spacing:-.02em;text-transform:uppercase;color:#F2F2F4;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">Inicio</a>
+        <a href="#entradas" onClick="{{ closeMenu }}" style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(34px,11vw,56px);line-height:1.1;letter-spacing:-.02em;text-transform:uppercase;color:#F2F2F4;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">Entradas</a>
+        <a href="#artistas" onClick="{{ closeMenu }}" style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(34px,11vw,56px);line-height:1.1;letter-spacing:-.02em;text-transform:uppercase;color:#F2F2F4;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">Artistas</a>
+        <a href="#info" onClick="{{ closeMenu }}" style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(34px,11vw,56px);line-height:1.1;letter-spacing:-.02em;text-transform:uppercase;color:#F2F2F4;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">Info</a>
+      </nav>
+      <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px">
+        <a href="#entradas" onClick="{{ closeMenu }}" style="display:flex;align-items:center;justify-content:center;height:56px;border-radius:999px;background:#F0113A;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:14px;letter-spacing:.1em;text-transform:uppercase">Comprar entradas</a>
+        <a href="https://wa.me/34640129711" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;height:56px;border-radius:999px;border:1px solid rgba(255,255,255,.22);color:#F2F2F4;font-family:Archivo,sans-serif;font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase">WhatsApp 640 12 97 11</a>
+      </div>
+    </div>
+  </sc-if>
+
+  <section id="inicio" data-screen-label="Hero" style="position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;padding:120px clamp(16px,5vw,64px) clamp(32px,5vw,64px);background:#08080A">
+    <div style="position:absolute;inset:0;background-image:url('uploads/foto-tardeo-limpia.jpg');background-size:cover;background-position:50% 56%;background-repeat:no-repeat;filter:brightness(1.05) contrast(1.02) saturate(.7) sepia(.12) hue-rotate(-10deg);pointer-events:none"></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 40%,rgba(214,17,42,.22) 0%,rgba(214,17,42,.06) 45%,rgba(8,8,10,0) 75%);mix-blend-mode:screen;pointer-events:none"></div>
+    <canvas ref="{{ canvasRef }}" style="position:absolute;inset:0;width:100%;height:100%;display:block"></canvas>
+    <div style="position:absolute;inset:0;background:linear-gradient(to top,#08080A 1%,rgba(8,8,10,.8) 20%,rgba(8,8,10,.42) 55%,rgba(8,8,10,.2) 100%);pointer-events:none"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(8,8,10,.7) 0%,rgba(8,8,10,.12) 25%,rgba(8,8,10,0) 50%,rgba(8,8,10,.12) 75%,rgba(8,8,10,.7) 100%);pointer-events:none"></div>
+
+    <div style="position:relative;display:flex;flex-direction:column;gap:clamp(20px,3vw,34px);max-width:1400px;margin:0 auto;width:100%">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:clamp(28px,6vw,72px);height:2px;background:#F0113A;display:block"></span>
+        <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(10px,2.4vw,13px);letter-spacing:.24em;text-transform:uppercase;color:#F0113A">Old School · Remember Session</span>
+      </div>
+
+      <h1 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(52px,13.5vw,196px);line-height:.84;letter-spacing:-.035em;text-transform:uppercase;color:#F7F7F9;text-shadow:0 0 70px rgba(240,17,58,.4)">Tardeo<br>Remember</h1>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:1px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);border-radius:14px;overflow:hidden;max-width:960px">
+        <div style="background:rgba(10,10,12,.72);backdrop-filter:blur(6px);padding:18px 20px;display:flex;flex-direction:column;gap:7px">
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Fecha</span>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(16px,2.2vw,20px);line-height:1.15;color:#F2F2F4">Sábado 14 de noviembre</span>
+        </div>
+        <div style="background:rgba(10,10,12,.72);backdrop-filter:blur(6px);padding:18px 20px;display:flex;flex-direction:column;gap:7px">
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Lugar</span>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(16px,2.2vw,20px);line-height:1.15;color:#F2F2F4">Coyote Club · Seseña (Toledo)</span>
+        </div>
+        <div style="background:rgba(10,10,12,.72);backdrop-filter:blur(6px);padding:18px 20px;display:flex;flex-direction:column;gap:7px">
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Horario</span>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(16px,2.2vw,20px);line-height:1.15;color:#F2F2F4">17:00h — 00:00h</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+        <a href="#entradas" style="display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 32px;border-radius:999px;background:#F0113A;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:14px;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 0 40px rgba(240,17,58,.5)" style-hover="background:#FF3355">Comprar entradas</a>
+        <a href="#artistas" style="display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 28px;border-radius:999px;border:1px solid rgba(255,255,255,.28);color:#F2F2F4;font-family:Archivo,sans-serif;font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase" style-hover="border-color:#F0113A;color:#F0113A">Ver line-up</a>
+      </div>
+    </div>
+  </section>
+
+  <div style="background:#F0113A;padding:14px 0;overflow:hidden;white-space:nowrap;border-top:1px solid rgba(0,0,0,.25);border-bottom:1px solid rgba(0,0,0,.25)">
+    <div ref="{{ tickerRef }}" style="display:inline-flex;gap:0;animation:tr-ticker 34s linear infinite;will-change:transform">
+      <span style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(14px,2.4vw,22px);letter-spacing:.06em;text-transform:uppercase;color:#0A0A0C;padding-right:26px">No music, no life&nbsp; ·&nbsp; Rafa XL&nbsp; ·&nbsp; Old School&nbsp; ·&nbsp; RTS&nbsp; ·&nbsp; Roberts Total Sound&nbsp; ·&nbsp; Somos Rememberos Hasta la Médula&nbsp; ·&nbsp;</span>
+      <span style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(14px,2.4vw,22px);letter-spacing:.06em;text-transform:uppercase;color:#0A0A0C;padding-right:26px">No music, no life&nbsp; ·&nbsp; Rafa XL&nbsp; ·&nbsp; Old School&nbsp; ·&nbsp; RTS&nbsp; ·&nbsp; Roberts Total Sound&nbsp; ·&nbsp; Somos Rememberos Hasta la Médula&nbsp; ·&nbsp;</span>
+    </div>
+  </div>
+
+  <section id="entradas" data-screen-label="Entradas" style="padding:clamp(56px,8vw,120px) clamp(16px,5vw,64px);background:radial-gradient(120% 80% at 10% 0%,rgba(240,17,58,.14),transparent 60%),#08080A">
+    <div style="max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(28px,4vw,48px)">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#F0113A">Entradas</span>
+        <h2 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(34px,7vw,84px);line-height:.92;letter-spacing:-.03em;text-transform:uppercase;color:#F7F7F9">Elige tu tramo</h2>
+        <p style="margin:0;max-width:52ch;font-size:clamp(14px,1.5vw,16px);line-height:1.6;color:#A5A5B0;text-wrap:pretty">Los tramos se abren por orden. Cuando uno se agota, no vuelve: el precio sube al siguiente.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:clamp(12px,1.6vw,20px)">
+
+        <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#0E0E12;opacity:.62">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#8B8B96">Tramo 1</span>
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#0A0A0C;background:#8B8B96;padding:5px 10px;border-radius:999px">Agotado</span>
+          </div>
+          <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(40px,5vw,58px);line-height:1;color:#8B8B96;text-decoration:line-through;text-decoration-thickness:3px">10 €</div>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:#8B8B96">Entrada anticipada. Vendido al completo.</p>
+          <span style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;border:1px solid rgba(255,255,255,.14);color:#77777F;font-family:Archivo,sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase">Sin disponibilidad</span>
+        </article>
+
+        <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px solid #F0113A;background:linear-gradient(180deg,rgba(240,17,58,.16),rgba(240,17,58,.03)),#0E0E12;box-shadow:0 0 0 1px rgba(240,17,58,.25),0 24px 60px -30px rgba(240,17,58,.8)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#F7F7F9">Tramo 2</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:#F0113A;padding:5px 10px;border-radius:999px">
+              <span style="width:6px;height:6px;border-radius:50%;background:#fff;display:block;animation:tr-pulse 1.4s ease-in-out infinite"></span>Disponible</span>
+          </div>
+          <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(40px,5vw,58px);line-height:1;color:#F7F7F9">13 €</div>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:#D3D3DA">Entrada <strong style="color:#fff;font-weight:600">+ consumición incluida</strong>. Acceso de 17:00h a 00:00h.</p>
+          <a href="https://wa.me/34640129711?text=Quiero%20entradas%20del%20Tramo%202%20para%20Tardeo%20Remember" target="_blank" rel="noopener" style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;background:#F0113A;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase" style-hover="background:#FF3355">Comprar ahora</a>
+        </article>
+
+        <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#0E0E12">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#F7F7F9">Tramo 3</span>
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#F0113A;border:1px solid rgba(240,17,58,.5);padding:4px 10px;border-radius:999px">Próximamente</span>
+          </div>
+          <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(28px,3.4vw,40px);line-height:1;color:#F7F7F9">Precio por<br>anunciar</div>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:#A5A5B0">Se abrirá cuando el Tramo 2 se agote. Avisamos en Instagram.</p>
+          <span style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;border:1px solid rgba(255,255,255,.18);color:#D3D3DA;font-family:Archivo,sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase">Muy pronto</span>
+        </article>
+
+        <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px dashed rgba(240,17,58,.45);background:#0B0B0F">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#F7F7F9">Tramo 4</span>
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#F0113A;border:1px solid rgba(240,17,58,.5);padding:4px 10px;border-radius:999px">Por desvelar</span>
+          </div>
+          <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(28px,3.4vw,40px);line-height:1;color:#F0113A">Artista<br>sorpresa</div>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:#A5A5B0">Un nombre que no esperas. Se anuncia días antes del evento.</p>
+          <span style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;border:1px dashed rgba(240,17,58,.45);color:#F0113A;font-family:Archivo,sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase">Secreto</span>
+        </article>
+
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:clamp(16px,2vw,32px);align-items:center;padding:clamp(24px,3.5vw,44px);border-radius:18px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(120deg,rgba(240,17,58,.1),transparent 60%),#0D0A14">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#F0113A">Reservados</span>
+          <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(26px,3.6vw,44px);line-height:1;letter-spacing:-.02em;text-transform:uppercase;color:#F7F7F9">5 personas + botella<br>+ 8 refrescos</h3>
+          <p style="margin:0;max-width:44ch;font-size:14px;line-height:1.6;color:#A5A5B0">Zona reservada con mesa propia. Plazas limitadas: se confirman por orden de reserva.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;align-items:flex-start">
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(52px,8vw,88px);line-height:.9;color:#F0113A">100</span>
+            <span style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(24px,3vw,34px);color:#F0113A">€</span>
+          </div>
+          <a href="https://wa.me/34640129711?text=Quiero%20reservar%20un%20reservado%20para%20Tardeo%20Remember" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 28px;border-radius:999px;background:#F0113A;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 0 36px rgba(240,17,58,.4)" style-hover="background:#FF3355">Reservar por WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="artistas" data-screen-label="Line-up" style="padding:clamp(56px,8vw,120px) clamp(16px,5vw,64px);background:#0B0B0F;border-top:1px solid rgba(255,255,255,.07)">
+    <div style="max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(24px,4vw,44px)">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#F0113A">Artistas</span>
+        <h2 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(34px,7vw,84px);line-height:.92;letter-spacing:-.03em;text-transform:uppercase;color:#F7F7F9">Line-up</h2>
+      </div>
+
+      <div style="display:flex;flex-direction:column">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 18px;align-items:center;padding:clamp(20px,2.6vw,30px) 0;border-top:1px solid rgba(255,255,255,.12)">
+          <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;min-width:0">
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;color:#F0113A">01</span>
+            <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(30px,6.5vw,72px);line-height:.95;letter-spacing:-.02em;text-transform:uppercase;color:#F7F7F9">Rafa XL</h3>
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:#F0113A;padding:5px 10px;border-radius:999px">Cabeza de cartel</span>
+          </div>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(11px,1.4vw,13px);letter-spacing:.16em;text-transform:uppercase;color:#A5A5B0;text-align:right">Old School</span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 18px;align-items:center;padding:clamp(20px,2.6vw,30px) 0;border-top:1px solid rgba(255,255,255,.12)">
+          <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;min-width:0">
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;color:#F0113A">02</span>
+            <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(26px,5.2vw,58px);line-height:.95;letter-spacing:-.02em;text-transform:uppercase;color:#F7F7F9">RTS · Roberts Total Sound</h3>
+          </div>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(11px,1.4vw,13px);letter-spacing:.16em;text-transform:uppercase;color:#A5A5B0;text-align:right">Old School</span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 18px;align-items:center;padding:clamp(20px,2.6vw,30px) 0;border-top:1px solid rgba(255,255,255,.12)">
+          <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;min-width:0">
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;color:#45454E">03</span>
+            <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(26px,5vw,56px);line-height:.95;letter-spacing:-.02em;text-transform:uppercase;color:#45454E">Por confirmar</h3>
+          </div>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(11px,1.4vw,13px);letter-spacing:.16em;text-transform:uppercase;color:#6D6D77;text-align:right">Pronto</span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 18px;align-items:center;padding:clamp(20px,2.6vw,30px) 0;border-top:1px solid rgba(255,255,255,.12);border-bottom:1px solid rgba(255,255,255,.12)">
+          <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;min-width:0">
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;color:#45454E">04</span>
+            <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(26px,5vw,56px);line-height:.95;letter-spacing:-.02em;text-transform:uppercase;color:#45454E">Por confirmar</h3>
+          </div>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(11px,1.4vw,13px);letter-spacing:.16em;text-transform:uppercase;color:#6D6D77;text-align:right">Pronto</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="info" data-screen-label="CTA final" style="background:#F0113A;padding:clamp(48px,7vw,104px) clamp(16px,5vw,64px)">
+    <div style="max-width:1400px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:clamp(28px,4vw,56px);align-items:center">
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#1A0206">Todo listo</span>
+        <h2 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(38px,7.4vw,90px);line-height:.88;letter-spacing:-.035em;text-transform:uppercase;color:#0A0A0C">Tú solo tienes<br>que venir.</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:6px">
+          <a href="https://wa.me/34640129711?text=Quiero%20entradas%20para%20Tardeo%20Remember" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 30px;border-radius:999px;background:#0A0A0C;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase" style-hover="background:#1A1A20">Comprar entradas</a>
+          <a href="https://wa.me/34640129711" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; justify-content: center; min-height: 56px; padding: 0 30px; border-radius: 999px; border: 2px solid #0A0A0C; color: #000000; font-family: Archivo,sans-serif; font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; background-color: #00FF01" style-hover="background:#0A0A0C;color:#fff">WhatsApp 640 12 97 11</a>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:12px">
+        <div style="background:#0A0A0C;border-radius:14px;padding:22px 20px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Fecha</span>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(15px,1.8vw,19px);line-height:1.2;color:#F7F7F9">Sábado 14 de noviembre</span>
+        </div>
+        <div style="background:#0A0A0C;border-radius:14px;padding:22px 20px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Lugar</span>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(15px,1.8vw,19px);line-height:1.2;color:#F7F7F9">Coyote Club<br>Seseña (Toledo)</span>
+        </div>
+        <div style="background:#0A0A0C;border-radius:14px;padding:22px 20px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Horario</span>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(15px,1.8vw,19px);line-height:1.2;color:#F7F7F9">17:00h — 00:00h</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="background:#08080A;padding:clamp(36px,5vw,64px) clamp(16px,5vw,64px) 32px">
+    <div style="max-width:1400px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:28px;align-items:start">
+      <div style="display:flex;align-items:center;gap:14px">
+        <img src="logo.png" alt="Rememberos Hasta la Médula" style="width:64px;height:64px;border-radius:50%;flex:0 0 auto">
+        <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:14px;line-height:1.15;letter-spacing:.06em;text-transform:uppercase;color:#F2F2F4">Rememberos<br>Hasta la Médula</span>
+      </div>
+      <nav style="display:flex;flex-direction:column;gap:10px">
+        <a href="#inicio" style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#A5A5B0" style-hover="color:#F0113A">Inicio</a>
+        <a href="#entradas" style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#A5A5B0" style-hover="color:#F0113A">Entradas</a>
+        <a href="#artistas" style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#A5A5B0" style-hover="color:#F0113A">Artistas</a>
+        <a href="#info" style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#A5A5B0" style-hover="color:#F0113A">Info</a>
+      </nav>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Contacto</span>
+        <a href="https://wa.me/34640129711" target="_blank" rel="noopener" style="font-family:Archivo,sans-serif;font-weight:700;font-size:16px;color:#F2F2F4" style-hover="color:#F0113A">640 12 97 11</a>
+        <span style="font-size:13px;line-height:1.5;color:#A5A5B0">Coyote Club · Seseña (Toledo)</span>
+      </div>
+    </div>
+    <div style="max-width:1400px;margin:28px auto 0;padding-top:20px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between">
+      <span style="font-size:12px;color:#6D6D77">© 2026 Rememberos Hasta la Médula</span>
+      <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#6D6D77">No music, no life</span>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;motionLevel&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;subtle&quot;,&quot;off&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;'full'|'subtle'|'off'&quot;,&quot;section&quot;:&quot;Movimiento&quot;},&quot;tickerSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:12,&quot;max&quot;:70,&quot;step&quot;:2,&quot;default&quot;:34,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Movimiento&quot;}}">
+class Component extends DCLogic {
+  state = { menuOpen: false, w: typeof window !== 'undefined' ? window.innerWidth : 1440 };
+
+  constructor(p) {
+    super(p);
+    this.canvasRef = React.createRef();
+    this.tickerRef = React.createRef();
+    this.vids = new Set();
+    this.blobs = {};
+    // the host serves these files without range support, so streaming stalls mid-clip:
+    // download once, play from a blob URL.
+    this.buffer = (el) => {
+      const url = el.getAttribute('src');
+      if (!url || url.startsWith('blob:')) return;
+      const use = (b) => { if (el.isConnected) { el.src = b; el.load(); const p = el.play(); if (p && p.catch) p.catch(() => {}); } };
+      if (this.blobs[url]) { (this.blobs[url].then ? this.blobs[url].then(use) : use(this.blobs[url])); return; }
+      this.blobs[url] = fetch(url).then(r => r.blob()).then(b => {
+        const u = URL.createObjectURL(b);
+        this.blobs[url] = u;
+        return u;
+      });
+      this.blobs[url].then(use).catch(() => {});
+    };
+    this.playLogo = (el) => {
+      if (!el) { return; }
+      this.vids.add(el);
+      this.buffer(el);
+      el.muted = true;
+      el.defaultMuted = true;
+      const go = () => { if (el.paused) { const p = el.play(); if (p && p.catch) p.catch(() => {}); } };
+      go();
+      ['loadeddata', 'canplay', 'pause', 'stalled', 'suspend', 'ended'].forEach(ev => el.addEventListener(ev, go));
+      document.addEventListener('visibilitychange', go);
+      if (this.logoTimer) clearInterval(this.logoTimer);
+      this.logoTimer = setInterval(() => this.vids.forEach(v => { if (v.isConnected && v.paused) { const p = v.play(); if (p && p.catch) p.catch(() => {}); } }), 700);
+    };
+  }
+
+  componentDidMount() {
+    this.onResize = () => {
+      const w = window.innerWidth;
+      if (w !== this.state.w) this.setState({ w, menuOpen: w >= 900 ? false : this.state.menuOpen });
+      this.sizeCanvas();
+    };
+    window.addEventListener('resize', this.onResize);
+    this.applyTicker();
+    this.startCanvas();
+  }
+
+  componentDidUpdate() { this.applyTicker(); }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.onResize);
+    if (this.logoTimer) clearInterval(this.logoTimer);
+    cancelAnimationFrame(this.raf);
+  }
+
+  applyTicker() {
+    const t = this.tickerRef.current;
+    if (t) t.style.animationDuration = (this.props.tickerSeconds ?? 34) + 's';
+  }
+
+  sizeCanvas() {
+    const c = this.canvasRef.current;
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.max(1, Math.round((r.width || c.parentElement?.clientWidth || window.innerWidth) * dpr));
+    const h = Math.max(1, Math.round((r.height || c.parentElement?.clientHeight || window.innerHeight) * dpr));
+    this.dpr = dpr;
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; return true; }
+    return false;
+  }
+
+  startCanvas() {
+    const c = this.canvasRef.current;
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    this.sizeCanvas();
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const level = this.props.motionLevel || 'full';
+    if (level === 'off') {
+      const paint = () => { this.sizeCanvas(); this.paintStatic(ctx); };
+      paint();
+      if (window.ResizeObserver) { this.ro = new ResizeObserver(paint); this.ro.observe(c); }
+      requestAnimationFrame(paint);
+      return;
+    }
+    const beams = level === 'subtle' ? 4 : 7;
+    const partN = level === 'subtle' ? 30 : 70;
+    const parts = Array.from({ length: partN }, () => ({
+      x: Math.random(), y: Math.random(), s: 0.4 + Math.random() * 1.6,
+      v: 0.00008 + Math.random() * 0.00028, a: 0.15 + Math.random() * 0.5
+    }));
+    const bars = 48;
+    const seeds = Array.from({ length: bars }, () => Math.random() * 6.28);
+    let t0 = performance.now();
+
+    const frame = (now) => {
+      const t = (now - t0) / 1000;
+      this.sizeCanvas();
+      const W = c.width, H = c.height, d = this.dpr || 1;
+      ctx.clearRect(0, 0, W, H);
+
+      // ambient red wash from the floor
+      let g = ctx.createRadialGradient(W * 0.5, H * 1.02, 0, W * 0.5, H * 1.02, H * 0.95);
+      g.addColorStop(0, 'rgba(240,17,58,0.42)');
+      g.addColorStop(0.45, 'rgba(160,10,36,0.16)');
+      g.addColorStop(1, 'rgba(8,8,10,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+      // lasers from the rig
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < beams; i++) {
+        const ph = reduce ? 0 : t * (0.8 + i * 0.22) + i * 1.7;
+        const ox = W * (0.12 + 0.76 * ((i + 0.5) / beams));
+        const ang = Math.sin(ph) * 0.62 + (i % 2 ? 0.1 : -0.1);
+        const len = H * 1.35;
+        const spread = (7 + Math.sin(ph * 1.7) * 3) * d;
+        const ex = ox + Math.sin(ang) * len;
+        const ey = H * 0.06 + Math.cos(ang) * len;
+        const lg = ctx.createLinearGradient(ox, H * 0.06, ex, ey);
+        lg.addColorStop(0, 'rgba(255,60,95,0.50)');
+        lg.addColorStop(0.55, 'rgba(240,17,58,0.16)');
+        lg.addColorStop(1, 'rgba(240,17,58,0)');
+        ctx.fillStyle = lg;
+        ctx.beginPath();
+        ctx.moveTo(ox - 1.5 * d, H * 0.05);
+        ctx.lineTo(ex - spread, ey);
+        ctx.lineTo(ex + spread, ey);
+        ctx.lineTo(ox + 1.5 * d, H * 0.05);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // equalizer along the floor
+      const bw = W / bars;
+      for (let i = 0; i < bars; i++) {
+        const k = reduce ? 0.4 : (Math.sin(t * 2.4 + seeds[i]) * 0.5 + 0.5) * (0.35 + 0.65 * Math.abs(Math.sin(t * 0.6 + i * 0.3)));
+        const h = (0.06 + k * 0.30) * H;
+        const bg2 = ctx.createLinearGradient(0, H - h, 0, H);
+        bg2.addColorStop(0, 'rgba(240,17,58,0)');
+        bg2.addColorStop(1, 'rgba(240,17,58,0.34)');
+        ctx.fillStyle = bg2;
+        ctx.fillRect(i * bw + bw * 0.18, H - h, bw * 0.64, h);
+      }
+
+      // dust
+      for (const p of parts) {
+        if (!reduce) { p.y -= p.v * 1000 / 60; if (p.y < -0.02) { p.y = 1.02; p.x = Math.random(); } }
+        ctx.fillStyle = 'rgba(255,120,145,' + p.a + ')';
+        ctx.beginPath();
+        ctx.arc(p.x * W + Math.sin(t * 0.6 + p.y * 12) * 10 * d, p.y * H, p.s * d, 0, 6.283);
+        ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      this.raf = requestAnimationFrame(frame);
+    };
+    this.raf = requestAnimationFrame(frame);
+  }
+
+  paintStatic(ctx) {
+    const c = this.canvasRef.current, W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H);
+    const g = ctx.createRadialGradient(W * 0.5, H, 0, W * 0.5, H, H);
+    g.addColorStop(0, 'rgba(240,17,58,0.38)');
+    g.addColorStop(1, 'rgba(8,8,10,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  }
+
+  renderVals() {
+    const compact = this.state.w < 900;
+    return {
+      isCompact: compact,
+      showNav: !compact,
+      menuOpen: compact && this.state.menuOpen,
+      toggleMenu: () => this.setState(s => ({ menuOpen: !s.menuOpen })),
+      closeMenu: () => this.setState({ menuOpen: false }),
+      canvasRef: this.canvasRef,
+      tickerRef: this.tickerRef,
+      logoVideoRef: this.playLogo,
+      logoVideoRef2: this.playLogo
+    };
+  }
+}
+</script>
+</body>
+</html>
