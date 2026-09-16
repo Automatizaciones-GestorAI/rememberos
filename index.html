@@ -23,7 +23,7 @@
   @keyframes tr-ticker { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
   @keyframes tr-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
   @keyframes tr-bar { 0%,100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
-  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 </style>
 </helmet>
 
@@ -78,7 +78,6 @@
   <section id="inicio" data-screen-label="Hero" style="position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;padding:120px clamp(16px,5vw,64px) clamp(32px,5vw,64px);background:#08080A">
     <div style="position:absolute;inset:0;background-image:url('uploads/foto-tardeo-limpia.jpg');background-size:cover;background-position:50% 56%;background-repeat:no-repeat;filter:brightness(1.05) contrast(1.02) saturate(.7) sepia(.12) hue-rotate(-10deg);pointer-events:none"></div>
     <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 40%,rgba(214,17,42,.22) 0%,rgba(214,17,42,.06) 45%,rgba(8,8,10,0) 75%);mix-blend-mode:screen;pointer-events:none"></div>
-    <canvas ref="{{ canvasRef }}" style="position:absolute;inset:0;width:100%;height:100%;display:block"></canvas>
     <div style="position:absolute;inset:0;background:linear-gradient(to top,#08080A 1%,rgba(8,8,10,.8) 20%,rgba(8,8,10,.42) 55%,rgba(8,8,10,.2) 100%);pointer-events:none"></div>
     <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(8,8,10,.7) 0%,rgba(8,8,10,.12) 25%,rgba(8,8,10,0) 50%,rgba(8,8,10,.12) 75%,rgba(8,8,10,.7) 100%);pointer-events:none"></div>
 
@@ -282,13 +281,12 @@
   </footer>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;motionLevel&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;subtle&quot;,&quot;off&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;'full'|'subtle'|'off'&quot;,&quot;section&quot;:&quot;Movimiento&quot;},&quot;tickerSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:12,&quot;max&quot;:70,&quot;step&quot;:2,&quot;default&quot;:34,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Movimiento&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;tickerSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:12,&quot;max&quot;:70,&quot;step&quot;:2,&quot;default&quot;:34,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Movimiento&quot;}}">
 class Component extends DCLogic {
   state = { menuOpen: false, w: typeof window !== 'undefined' ? window.innerWidth : 1440 };
 
   constructor(p) {
     super(p);
-    this.canvasRef = React.createRef();
     this.tickerRef = React.createRef();
     this.vids = new Set();
     this.blobs = {};
@@ -325,11 +323,9 @@ class Component extends DCLogic {
     this.onResize = () => {
       const w = window.innerWidth;
       if (w !== this.state.w) this.setState({ w, menuOpen: w >= 900 ? false : this.state.menuOpen });
-      this.sizeCanvas();
     };
     window.addEventListener('resize', this.onResize);
     this.applyTicker();
-    this.startCanvas();
   }
 
   componentDidUpdate() { this.applyTicker(); }
@@ -337,120 +333,11 @@ class Component extends DCLogic {
   componentWillUnmount() {
     window.removeEventListener('resize', this.onResize);
     if (this.logoTimer) clearInterval(this.logoTimer);
-    cancelAnimationFrame(this.raf);
   }
 
   applyTicker() {
     const t = this.tickerRef.current;
     if (t) t.style.animationDuration = (this.props.tickerSeconds ?? 34) + 's';
-  }
-
-  sizeCanvas() {
-    const c = this.canvasRef.current;
-    if (!c) return;
-    const r = c.getBoundingClientRect();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = Math.max(1, Math.round((r.width || c.parentElement?.clientWidth || window.innerWidth) * dpr));
-    const h = Math.max(1, Math.round((r.height || c.parentElement?.clientHeight || window.innerHeight) * dpr));
-    this.dpr = dpr;
-    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; return true; }
-    return false;
-  }
-
-  startCanvas() {
-    const c = this.canvasRef.current;
-    if (!c) return;
-    const ctx = c.getContext('2d');
-    this.sizeCanvas();
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const level = this.props.motionLevel || 'full';
-    if (level === 'off') {
-      const paint = () => { this.sizeCanvas(); this.paintStatic(ctx); };
-      paint();
-      if (window.ResizeObserver) { this.ro = new ResizeObserver(paint); this.ro.observe(c); }
-      requestAnimationFrame(paint);
-      return;
-    }
-    const beams = level === 'subtle' ? 4 : 7;
-    const partN = level === 'subtle' ? 30 : 70;
-    const parts = Array.from({ length: partN }, () => ({
-      x: Math.random(), y: Math.random(), s: 0.4 + Math.random() * 1.6,
-      v: 0.00008 + Math.random() * 0.00028, a: 0.15 + Math.random() * 0.5
-    }));
-    const bars = 48;
-    const seeds = Array.from({ length: bars }, () => Math.random() * 6.28);
-    let t0 = performance.now();
-
-    const frame = (now) => {
-      const t = (now - t0) / 1000;
-      this.sizeCanvas();
-      const W = c.width, H = c.height, d = this.dpr || 1;
-      ctx.clearRect(0, 0, W, H);
-
-      // ambient red wash from the floor
-      let g = ctx.createRadialGradient(W * 0.5, H * 1.02, 0, W * 0.5, H * 1.02, H * 0.95);
-      g.addColorStop(0, 'rgba(240,17,58,0.42)');
-      g.addColorStop(0.45, 'rgba(160,10,36,0.16)');
-      g.addColorStop(1, 'rgba(8,8,10,0)');
-      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-
-      // lasers from the rig
-      ctx.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < beams; i++) {
-        const ph = reduce ? 0 : t * (0.8 + i * 0.22) + i * 1.7;
-        const ox = W * (0.12 + 0.76 * ((i + 0.5) / beams));
-        const ang = Math.sin(ph) * 0.62 + (i % 2 ? 0.1 : -0.1);
-        const len = H * 1.35;
-        const spread = (7 + Math.sin(ph * 1.7) * 3) * d;
-        const ex = ox + Math.sin(ang) * len;
-        const ey = H * 0.06 + Math.cos(ang) * len;
-        const lg = ctx.createLinearGradient(ox, H * 0.06, ex, ey);
-        lg.addColorStop(0, 'rgba(255,60,95,0.50)');
-        lg.addColorStop(0.55, 'rgba(240,17,58,0.16)');
-        lg.addColorStop(1, 'rgba(240,17,58,0)');
-        ctx.fillStyle = lg;
-        ctx.beginPath();
-        ctx.moveTo(ox - 1.5 * d, H * 0.05);
-        ctx.lineTo(ex - spread, ey);
-        ctx.lineTo(ex + spread, ey);
-        ctx.lineTo(ox + 1.5 * d, H * 0.05);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // equalizer along the floor
-      const bw = W / bars;
-      for (let i = 0; i < bars; i++) {
-        const k = reduce ? 0.4 : (Math.sin(t * 2.4 + seeds[i]) * 0.5 + 0.5) * (0.35 + 0.65 * Math.abs(Math.sin(t * 0.6 + i * 0.3)));
-        const h = (0.06 + k * 0.30) * H;
-        const bg2 = ctx.createLinearGradient(0, H - h, 0, H);
-        bg2.addColorStop(0, 'rgba(240,17,58,0)');
-        bg2.addColorStop(1, 'rgba(240,17,58,0.34)');
-        ctx.fillStyle = bg2;
-        ctx.fillRect(i * bw + bw * 0.18, H - h, bw * 0.64, h);
-      }
-
-      // dust
-      for (const p of parts) {
-        if (!reduce) { p.y -= p.v * 1000 / 60; if (p.y < -0.02) { p.y = 1.02; p.x = Math.random(); } }
-        ctx.fillStyle = 'rgba(255,120,145,' + p.a + ')';
-        ctx.beginPath();
-        ctx.arc(p.x * W + Math.sin(t * 0.6 + p.y * 12) * 10 * d, p.y * H, p.s * d, 0, 6.283);
-        ctx.fill();
-      }
-      ctx.globalCompositeOperation = 'source-over';
-      this.raf = requestAnimationFrame(frame);
-    };
-    this.raf = requestAnimationFrame(frame);
-  }
-
-  paintStatic(ctx) {
-    const c = this.canvasRef.current, W = c.width, H = c.height;
-    ctx.clearRect(0, 0, W, H);
-    const g = ctx.createRadialGradient(W * 0.5, H, 0, W * 0.5, H, H);
-    g.addColorStop(0, 'rgba(240,17,58,0.38)');
-    g.addColorStop(1, 'rgba(8,8,10,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
 
   renderVals() {
@@ -461,7 +348,6 @@ class Component extends DCLogic {
       menuOpen: compact && this.state.menuOpen,
       toggleMenu: () => this.setState(s => ({ menuOpen: !s.menuOpen })),
       closeMenu: () => this.setState({ menuOpen: false }),
-      canvasRef: this.canvasRef,
       tickerRef: this.tickerRef,
       logoVideoRef: this.playLogo,
       logoVideoRef2: this.playLogo
