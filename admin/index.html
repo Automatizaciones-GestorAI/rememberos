@@ -53,6 +53,7 @@
   .checkbox { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #A5A5B0; }
   .checkbox input { width: auto; }
   #hero-preview img { max-width: 100%; border-radius: 10px; margin: 10px 0; display: block; }
+  .logo-video { display: block; width: 64px; height: 64px; border-radius: 50%; object-fit: cover; margin: 0 auto 18px; background: #08080A; box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 0 24px rgba(240,17,58,.35); }
 </style>
 </head>
 <body>
@@ -76,6 +77,7 @@
   var TRAMO_STATUS_LABELS = { disponible: 'Disponible', agotado: 'Agotado', proximamente: 'Próximamente', secreto: 'Secreto/sorpresa' };
 
   var session = null;
+  var recoveryMode = false;
   var tramos = [];
   var artistsList = [];
   var $app = document.getElementById('app');
@@ -91,6 +93,21 @@
     });
   }
   function attr(s) { return escapeHtml(s); }
+  var LOGO_VIDEO_HTML = '<video class="logo-video" data-logo-video autoplay muted loop playsinline poster="../logo.png" src="../uploads/rememberos-todo.mp4"></video>';
+  function playLogoVideo(video) {
+    if (!video) return;
+    var url = video.getAttribute('src');
+    fetch(url).then(function (r) { return r.blob(); }).then(function (b) {
+      if (!video.isConnected) return;
+      video.src = URL.createObjectURL(b);
+      video.load();
+      var p = video.play();
+      if (p && p.catch) p.catch(function () {});
+    }).catch(function () {
+      var p = video.play();
+      if (p && p.catch) p.catch(function () {});
+    });
+  }
   function publicUrlFor(path) {
     if (!path) return '';
     if (/^https?:\/\//.test(path)) return path;
@@ -101,36 +118,136 @@
   async function boot() {
     var res = await sb.auth.getSession();
     session = res.data.session;
-    sb.auth.onAuthStateChange(function (_e, s) { session = s; renderRoot(); });
+    sb.auth.onAuthStateChange(function (event, s) {
+      if (event === 'PASSWORD_RECOVERY') recoveryMode = true;
+      session = s;
+      renderRoot();
+    });
     renderRoot();
   }
 
   function renderRoot() {
-    document.getElementById('logout-btn').style.display = session ? 'inline-flex' : 'none';
-    if (!session) return renderLogin();
+    document.getElementById('logout-btn').style.display = (session && !recoveryMode) ? 'inline-flex' : 'none';
+    if (recoveryMode) return renderSetNewPassword();
+    if (!session) return renderLogin('login');
+    if (session.user && session.user.user_metadata && session.user.user_metadata.must_change_password) return renderForceChangePassword();
     renderEventsList();
   }
 
-  function renderLogin() {
+  function renderLogin(mode) {
     $app.innerHTML = '';
+    if (mode === 'forgot') {
+      var fcard = el(
+        '<form id="forgot-form" class="card" style="max-width:360px;margin:60px auto">' +
+        LOGO_VIDEO_HTML +
+        '<h2>Recuperar contraseña</h2>' +
+        '<label>Email<input type="email" id="forgot-email" required autocomplete="username"></label>' +
+        '<p id="forgot-msg"></p>' +
+        '<div class="actions">' +
+        '<button type="submit">Enviar enlace</button>' +
+        '<button type="button" id="forgot-back" class="secondary">Volver</button>' +
+        '</div>' +
+        '</form>'
+      );
+      $app.appendChild(fcard);
+      playLogoVideo(fcard.querySelector('[data-logo-video]'));
+      fcard.querySelector('#forgot-back').addEventListener('click', function () { renderLogin('login'); });
+      fcard.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var email = fcard.querySelector('#forgot-email').value.trim();
+        var msg = fcard.querySelector('#forgot-msg');
+        msg.className = '';
+        msg.textContent = 'Enviando…';
+        var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+        if (res.error) { msg.textContent = 'Error: ' + res.error.message; msg.className = 'error'; return; }
+        msg.textContent = 'Revisa tu email: te hemos enviado un enlace para elegir una contraseña nueva.';
+        msg.className = 'ok';
+      });
+      return;
+    }
+
     var form = el(
       '<form id="login-form" class="card" style="max-width:360px;margin:60px auto">' +
+      LOGO_VIDEO_HTML +
       '<h2>Acceso administrador</h2>' +
       '<label>Email<input type="email" id="login-email" required autocomplete="username"></label>' +
       '<label>Contraseña<input type="password" id="login-password" required autocomplete="current-password"></label>' +
       '<p id="login-error" class="error"></p>' +
-      '<button type="submit">Entrar</button>' +
+      '<div class="actions"><button type="submit">Entrar</button></div>' +
+      '<button type="button" id="forgot-link" class="link" style="margin-top:12px">¿Olvidaste tu contraseña?</button>' +
       '</form>'
     );
     $app.appendChild(form);
+    playLogoVideo(form.querySelector('[data-logo-video]'));
+    form.querySelector('#forgot-link').addEventListener('click', function () { renderLogin('forgot'); });
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
-      var email = document.getElementById('login-email').value.trim();
-      var password = document.getElementById('login-password').value;
-      var errorEl = document.getElementById('login-error');
+      var email = form.querySelector('#login-email').value.trim();
+      var password = form.querySelector('#login-password').value;
+      var errorEl = form.querySelector('#login-error');
       errorEl.textContent = '';
       var res = await sb.auth.signInWithPassword({ email: email, password: password });
       if (res.error) errorEl.textContent = 'No se pudo entrar: ' + res.error.message;
+    });
+  }
+
+  function renderForceChangePassword() {
+    $app.innerHTML = '';
+    var card = el(
+      '<form id="force-change-form" class="card" style="max-width:360px;margin:60px auto">' +
+      LOGO_VIDEO_HTML +
+      '<h2>Elige tu contraseña</h2>' +
+      '<p class="muted" style="margin-bottom:14px">Es tu primer acceso. Por seguridad, elige una contraseña nueva antes de continuar.</p>' +
+      '<label>Contraseña nueva<input type="password" id="force-password" required minlength="6" autocomplete="new-password"></label>' +
+      '<label>Repite la contraseña<input type="password" id="force-password-2" required minlength="6" autocomplete="new-password"></label>' +
+      '<p id="force-msg" class="error"></p>' +
+      '<button type="submit">Guardar y entrar</button>' +
+      '</form>'
+    );
+    $app.appendChild(card);
+    playLogoVideo(card.querySelector('[data-logo-video]'));
+    card.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var p1 = card.querySelector('#force-password').value;
+      var p2 = card.querySelector('#force-password-2').value;
+      var msg = card.querySelector('#force-msg');
+      if (p1 !== p2) { msg.textContent = 'Las contraseñas no coinciden.'; return; }
+      msg.textContent = '';
+      var res = await sb.auth.updateUser({ password: p1, data: { must_change_password: false } });
+      if (res.error) { msg.textContent = 'Error: ' + res.error.message; return; }
+      var s = await sb.auth.getSession();
+      session = s.data.session;
+      renderRoot();
+    });
+  }
+
+  function renderSetNewPassword() {
+    $app.innerHTML = '';
+    var card = el(
+      '<form id="recovery-form" class="card" style="max-width:360px;margin:60px auto">' +
+      LOGO_VIDEO_HTML +
+      '<h2>Nueva contraseña</h2>' +
+      '<label>Contraseña nueva<input type="password" id="recovery-password" required minlength="6" autocomplete="new-password"></label>' +
+      '<label>Repite la contraseña<input type="password" id="recovery-password-2" required minlength="6" autocomplete="new-password"></label>' +
+      '<p id="recovery-msg" class="error"></p>' +
+      '<button type="submit">Guardar contraseña</button>' +
+      '</form>'
+    );
+    $app.appendChild(card);
+    playLogoVideo(card.querySelector('[data-logo-video]'));
+    card.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var p1 = card.querySelector('#recovery-password').value;
+      var p2 = card.querySelector('#recovery-password-2').value;
+      var msg = card.querySelector('#recovery-msg');
+      if (p1 !== p2) { msg.textContent = 'Las contraseñas no coinciden.'; return; }
+      msg.textContent = '';
+      var res = await sb.auth.updateUser({ password: p1, data: { must_change_password: false } });
+      if (res.error) { msg.textContent = 'Error: ' + res.error.message; return; }
+      recoveryMode = false;
+      var s = await sb.auth.getSession();
+      session = s.data.session;
+      renderRoot();
     });
   }
 
