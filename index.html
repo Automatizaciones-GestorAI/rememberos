@@ -343,8 +343,14 @@ class Component extends DCLogic {
   }
 
   lockScroll() {
+    this.scrollY = window.scrollY || window.pageYOffset || 0;
     document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
+    const b = document.body.style;
+    b.overflow = 'hidden';
+    b.position = 'fixed';
+    b.top = -this.scrollY + 'px';
+    b.left = '0';
+    b.right = '0';
     this.blockTouch = (e) => e.preventDefault();
     document.addEventListener('touchmove', this.blockTouch, { passive: false });
   }
@@ -352,7 +358,13 @@ class Component extends DCLogic {
   unlockScroll() {
     if (this.blockTouch) { document.removeEventListener('touchmove', this.blockTouch); this.blockTouch = null; }
     document.documentElement.style.overflow = '';
-    document.body.style.overflow = '';
+    const b = document.body.style;
+    b.overflow = '';
+    b.position = '';
+    b.top = '';
+    b.left = '';
+    b.right = '';
+    window.scrollTo(0, this.scrollY || 0);
   }
 
   applyTicker() {
