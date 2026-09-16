@@ -332,14 +332,34 @@ class Component extends DCLogic {
   componentDidUpdate(prevProps, prevState) {
     this.applyTicker();
     if (prevState.menuOpen !== this.state.menuOpen) {
-      document.body.style.overflow = this.state.menuOpen ? 'hidden' : '';
+      if (this.state.menuOpen) this.lockScroll(); else this.unlockScroll();
     }
   }
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.onResize);
     if (this.logoTimer) clearInterval(this.logoTimer);
-    document.body.style.overflow = '';
+    if (this.state.menuOpen) this.unlockScroll();
+  }
+
+  lockScroll() {
+    this.scrollY = window.scrollY || window.pageYOffset || 0;
+    const b = document.body.style;
+    b.position = 'fixed';
+    b.top = -this.scrollY + 'px';
+    b.left = '0';
+    b.right = '0';
+    b.overflow = 'hidden';
+  }
+
+  unlockScroll() {
+    const b = document.body.style;
+    b.position = '';
+    b.top = '';
+    b.left = '';
+    b.right = '';
+    b.overflow = '';
+    window.scrollTo(0, this.scrollY || 0);
   }
 
   applyTicker() {
