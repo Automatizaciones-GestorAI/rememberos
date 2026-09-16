@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin · Rememberos Hasta la Médula</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #08080A; color: #F2F2F4; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3 { font-family: Archivo, sans-serif; font-weight: 800; margin: 0 0 16px; text-transform: uppercase; letter-spacing: -.01em; }
+  h2 { font-size: 20px; }
+  h3 { font-size: 15px; color: #F0113A; margin-top: 24px; }
+  header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: rgba(8,8,10,.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(240,17,58,.25); }
+  header .title { font-family: Archivo, sans-serif; font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 80px; }
+  .card { background: #101014; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #A5A5B0; margin-bottom: 14px; }
+  input, select, textarea { background: #08080A; border: 1px solid rgba(255,255,255,.16); color: #F2F2F4; border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 14px; }
+  textarea { min-height: 70px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid #F0113A; outline-offset: 1px; }
+  button { font-family: Archivo, sans-serif; font-weight: 800; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; border-radius: 999px; border: none; padding: 12px 20px; cursor: pointer; background: #F0113A; color: #fff; }
+  button:hover { background: #FF3355; }
+  button.secondary { background: transparent; border: 1px solid rgba(255,255,255,.24); color: #F2F2F4; }
+  button.secondary:hover { border-color: #F0113A; color: #F0113A; background: transparent; }
+  button.danger { background: transparent; border: 1px solid rgba(255,60,60,.5); color: #FF5C5C; }
+  button.danger:hover { background: rgba(255,60,60,.12); }
+  button.small { padding: 8px 12px; font-size: 11px; }
+  button.link { background: none; color: #A5A5B0; padding: 0; margin-bottom: 16px; text-transform: none; font-family: Inter, sans-serif; font-weight: 500; letter-spacing: 0; }
+  button.link:hover { color: #F0113A; }
+  .actions { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .muted { color: #6D6D77; font-size: 12px; display: block; margin-top: 4px; }
+  .error { color: #FF5C5C; font-size: 13px; }
+  .ok { color: #4ADE80; font-size: 13px; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-top: 1px solid rgba(255,255,255,.08); cursor: pointer; }
+  .row:first-child { border-top: none; }
+  .row:hover { color: #F0113A; }
+  .row-main { display: flex; flex-direction: column; }
+  .badge { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,.1); white-space: nowrap; }
+  .badge-active { background: #F0113A; color: #fff; }
+  .badge-draft { background: rgba(255,255,255,.14); color: #A5A5B0; }
+  .badge-past { background: rgba(255,255,255,.06); color: #6D6D77; }
+  .row-edit { display: grid; grid-template-columns: 70px 1fr 1fr; gap: 8px; padding: 12px 0; border-top: 1px solid rgba(255,255,255,.08); align-items: start; }
+  .row-edit:first-child { border-top: none; }
+  .row-edit select, .row-edit textarea, .row-edit .checkbox { grid-column: 1 / -1; }
+  .row-edit .w-cta { grid-column: 1 / -1; }
+  .checkbox { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #A5A5B0; }
+  .checkbox input { width: auto; }
+  #hero-preview img { max-width: 100%; border-radius: 10px; margin: 10px 0; display: block; }
+</style>
+</head>
+<body>
+<header>
+  <span class="title">Rememberos · Admin</span>
+  <button id="logout-btn" class="secondary" style="display:none">Cerrar sesión</button>
+</header>
+<main id="app"></main>
+
+<script>
+(function () {
+  var cfg = window.SUPABASE_CONFIG;
+  if (!cfg || cfg.url.indexOf('REPLACE_WITH') === 0) {
+    document.getElementById('app').innerHTML = '<div class="card"><h2>Falta configurar Supabase</h2><p>Edita <code>supabase-config.js</code> en la raíz del proyecto con la URL y la clave pública (anon) de tu proyecto de Supabase.</p></div>';
+    return;
+  }
+
+  var sb = window.supabase.createClient(cfg.url, cfg.anonKey);
+
+  var STATUS_LABELS = { draft: 'Borrador', active: 'Activo (portada)', past: 'Pasado' };
+  var TRAMO_STATUS_LABELS = { disponible: 'Disponible', agotado: 'Agotado', proximamente: 'Próximamente', secreto: 'Secreto/sorpresa' };
+
+  var session = null;
+  var tramos = [];
+  var artistsList = [];
+  var $app = document.getElementById('app');
+
+  function el(html) {
+    var t = document.createElement('template');
+    t.innerHTML = html.trim();
+    return t.content.firstElementChild;
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function attr(s) { return escapeHtml(s); }
+  function publicUrlFor(path) {
+    if (!path) return '';
+    if (/^https?:\/\//.test(path)) return path;
+    return sb.storage.from('event-images').getPublicUrl(path).data.publicUrl;
+  }
+
+  async function boot() {
+    var res = await sb.auth.getSession();
+    session = res.data.session;
+    sb.auth.onAuthStateChange(function (_e, s) { session = s; renderRoot(); });
+    renderRoot();
+  }
+
+  function renderRoot() {
+    document.getElementById('logout-btn').style.display = session ? 'inline-flex' : 'none';
+    if (!session) return renderLogin();
+    renderEventsList();
+  }
+
+  function renderLogin() {
+    $app.innerHTML = '';
+    var form = el(
+      '<form id="login-form" class="card" style="max-width:360px;margin:60px auto">' +
+      '<h2>Acceso administrador</h2>' +
+      '<label>Email<input type="email" id="login-email" required autocomplete="username"></label>' +
+      '<label>Contraseña<input type="password" id="login-password" required autocomplete="current-password"></label>' +
+      '<p id="login-error" class="error"></p>' +
+      '<button type="submit">Entrar</button>' +
+      '</form>'
+    );
+    $app.appendChild(form);
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var email = document.getElementById('login-email').value.trim();
+      var password = document.getElementById('login-password').value;
+      var errorEl = document.getElementById('login-error');
+      errorEl.textContent = '';
+      var res = await sb.auth.signInWithPassword({ email: email, password: password });
+      if (res.error) errorEl.textContent = 'No se pudo entrar: ' + res.error.message;
+    });
+  }
+
+  async function renderEventsList() {
+    $app.innerHTML = '<p class="muted">Cargando eventos…</p>';
+    var res = await sb.from('events').select('*').order('event_date', { ascending: false });
+    if (res.error) { $app.innerHTML = '<p class="error">Error cargando eventos: ' + res.error.message + '</p>'; return; }
+    var events = res.data || [];
+    $app.innerHTML = '';
+    var wrap = el('<div class="card"><h2>Eventos</h2><div id="events-rows"></div></div>');
+    $app.appendChild(wrap);
+    var rows = wrap.querySelector('#events-rows');
+    events.forEach(function (ev) {
+      var row = el(
+        '<div class="row event-row">' +
+        '<div class="row-main"><strong>' + escapeHtml(ev.title) + '</strong>' +
+        '<span class="muted">' + escapeHtml(ev.event_date) + ' · ' + escapeHtml(ev.venue_name || 'Sin lugar') + '</span></div>' +
+        '<span class="badge badge-' + ev.status + '">' + (STATUS_LABELS[ev.status] || ev.status) + '</span>' +
+        '</div>'
+      );
+      row.addEventListener('click', function () { openEvent(ev.id); });
+      rows.appendChild(row);
+    });
+    var newBtn = el('<button id="new-event-btn" class="secondary" style="margin-top:16px">+ Nuevo evento</button>');
+    wrap.appendChild(newBtn);
+    newBtn.addEventListener('click', createEvent);
+  }
+
+  async function createEvent() {
+    var res = await sb.from('events').insert({
+      slug: 'evento-' + Date.now(),
+      title: 'Nuevo evento',
+      event_date: new Date().toISOString().slice(0, 10),
+      status: 'draft'
+    }).select().single();
+    if (res.error) return alert('No se pudo crear el evento: ' + res.error.message);
+    openEvent(res.data.id);
+  }
+
+  async function openEvent(id) {
+    $app.innerHTML = '<p class="muted">Cargando…</p>';
+    var results = await Promise.all([
+      sb.from('events').select('*').eq('id', id).single(),
+      sb.from('ticket_tramos').select('*').eq('event_id', id).order('position'),
+      sb.from('artists').select('*').eq('event_id', id).order('position')
+    ]);
+    var evRes = results[0], trRes = results[1], arRes = results[2];
+    if (evRes.error) { $app.innerHTML = '<p class="error">' + evRes.error.message + '</p>'; return; }
+    tramos = trRes.data || [];
+    artistsList = arRes.data || [];
+    renderEventEditor(evRes.data);
+  }
+
+  function renderEventEditor(ev) {
+    $app.innerHTML = '';
+    var backBtn = el('<button id="back-btn" class="link">&larr; Volver a eventos</button>');
+    backBtn.addEventListener('click', renderEventsList);
+    $app.appendChild(backBtn);
+
+    var form = el(
+      '<form id="event-form" class="card">' +
+      '<h2>Datos del evento</h2>' +
+      '<label>Título<input name="title" required value="' + attr(ev.title) + '"></label>' +
+      '<label>Subtítulo<input name="subtitle" value="' + attr(ev.subtitle) + '"></label>' +
+      '<label>Fecha<input name="event_date" type="date" required value="' + attr(ev.event_date) + '"></label>' +
+      '<label>Horario (texto libre)<input name="time_range" value="' + attr(ev.time_range) + '" placeholder="17:00h — 00:00h"></label>' +
+      '<label>Lugar<input name="venue_name" value="' + attr(ev.venue_name) + '" placeholder="Coyote Club"></label>' +
+      '<label>Ubicación<input name="venue_location" value="' + attr(ev.venue_location) + '" placeholder="Seseña (Toledo)"></label>' +
+      '<label>WhatsApp (solo números, con prefijo país)<input name="whatsapp_number" value="' + attr(ev.whatsapp_number) + '" placeholder="34640129711"></label>' +
+      '<label>Estado<select name="status">' +
+      '<option value="draft"' + (ev.status === 'draft' ? ' selected' : '') + '>Borrador (no se ve en la web)</option>' +
+      '<option value="active"' + (ev.status === 'active' ? ' selected' : '') + '>Activo (portada de la web)</option>' +
+      '<option value="past"' + (ev.status === 'past' ? ' selected' : '') + '>Pasado</option>' +
+      '</select></label>' +
+      '<label>Foto de portada<input type="file" id="hero-file" accept="image/*">' +
+      '<input type="hidden" name="hero_image_url" value="' + attr(ev.hero_image_url) + '"></label>' +
+      '<div id="hero-preview">' + (ev.hero_image_url ? '<img src="' + attr(publicUrlFor(ev.hero_image_url)) + '" alt="">' : '') + '</div>' +
+      '<label>Velocidad de la cinta roja (segundos)<input name="ticker_seconds" type="number" min="12" max="70" value="' + (ev.ticker_seconds == null ? 34 : ev.ticker_seconds) + '"></label>' +
+      '<h3>Reservados</h3>' +
+      '<label>Título<input name="reserved_title" value="' + attr(ev.reserved_title) + '" placeholder="5 personas + botella + 8 refrescos"></label>' +
+      '<label>Precio (€)<input name="reserved_price" type="number" step="0.01" value="' + (ev.reserved_price == null ? '' : ev.reserved_price) + '"></label>' +
+      '<label>Descripción<textarea name="reserved_description">' + attr(ev.reserved_description) + '</textarea></label>' +
+      '<div class="actions">' +
+      '<button type="submit">Guardar evento</button>' +
+      '<button type="button" id="delete-event-btn" class="danger">Eliminar evento</button>' +
+      '</div>' +
+      '<p id="event-save-msg"></p>' +
+      '</form>'
+    );
+    $app.appendChild(form);
+
+    form.querySelector('#hero-file').addEventListener('change', async function (e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var msg = form.querySelector('#event-save-msg');
+      msg.textContent = 'Subiendo imagen…';
+      msg.className = '';
+      var path = ev.id + '/' + Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      var upRes = await sb.storage.from('event-images').upload(path, file, { upsert: true });
+      if (upRes.error) { msg.textContent = 'Error subiendo imagen: ' + upRes.error.message; msg.className = 'error'; return; }
+      form.querySelector('input[name="hero_image_url"]').value = path;
+      form.querySelector('#hero-preview').innerHTML = '<img src="' + attr(publicUrlFor(path)) + '" alt="">';
+      msg.textContent = 'Imagen subida. Recuerda pulsar "Guardar evento".';
+      msg.className = 'ok';
+    });
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var fd = new FormData(form);
+      var payload = {
+        title: fd.get('title'),
+        subtitle: fd.get('subtitle') || null,
+        event_date: fd.get('event_date'),
+        time_range: fd.get('time_range') || null,
+        venue_name: fd.get('venue_name') || null,
+        venue_location: fd.get('venue_location') || null,
+        whatsapp_number: fd.get('whatsapp_number') || null,
+        status: fd.get('status'),
+        hero_image_url: fd.get('hero_image_url') || null,
+        ticker_seconds: Number(fd.get('ticker_seconds')) || 34,
+        reserved_title: fd.get('reserved_title') || null,
+        reserved_price: fd.get('reserved_price') ? Number(fd.get('reserved_price')) : null,
+        reserved_description: fd.get('reserved_description') || null
+      };
+      var msg = form.querySelector('#event-save-msg');
+      var res = await sb.from('events').update(payload).eq('id', ev.id);
+      if (res.error) {
+        var extra = res.error.message.indexOf('one_active_event') !== -1 ? ' (ya hay otro evento marcado como Activo — solo puede haber uno a la vez).' : '';
+        msg.textContent = 'Error: ' + res.error.message + extra;
+        msg.className = 'error';
+        return;
+      }
+      msg.textContent = 'Guardado.';
+      msg.className = 'ok';
+    });
+
+    form.querySelector('#delete-event-btn').addEventListener('click', async function () {
+      if (!confirm('¿Eliminar este evento y todos sus tramos/artistas? Esto no se puede deshacer.')) return;
+      var res = await sb.from('events').delete().eq('id', ev.id);
+      if (res.error) return alert('Error: ' + res.error.message);
+      renderEventsList();
+    });
+
+    renderTramosSection(ev.id);
+    renderArtistsSection(ev.id);
+  }
+
+  function renderTramosSection(eventId) {
+    var section = el('<div class="card"><h2>Tramos de entrada</h2><div id="tramos-rows"></div></div>');
+    $app.appendChild(section);
+    var rows = section.querySelector('#tramos-rows');
+
+    function renderRows() {
+      rows.innerHTML = '';
+      tramos.forEach(function (t, i) {
+        var options = Object.keys(TRAMO_STATUS_LABELS).map(function (k) {
+          return '<option value="' + k + '"' + (t.status === k ? ' selected' : '') + '>' + TRAMO_STATUS_LABELS[k] + '</option>';
+        }).join('');
+        var row = el(
+          '<div class="row-edit">' +
+          '<input type="number" class="w-orden" value="' + t.position + '" title="Orden" data-field="position">' +
+          '<input class="w-label" value="' + attr(t.label) + '" placeholder="Tramo 1" data-field="label">' +
+          '<input class="w-price" type="number" step="0.01" value="' + (t.price == null ? '' : t.price) + '" placeholder="Precio (vacío = sin anunciar)" data-field="price">' +
+          '<select data-field="status">' + options + '</select>' +
+          '<input class="w-cta" value="' + attr(t.cta_text) + '" placeholder="Comprar ahora" data-field="cta_text">' +
+          '<textarea placeholder="Descripción" data-field="description">' + attr(t.description) + '</textarea>' +
+          '<button type="button" class="danger small" data-remove>Eliminar</button>' +
+          '</div>'
+        );
+        row.querySelectorAll('[data-field]').forEach(function (input) {
+          input.addEventListener('input', function () {
+            var field = input.dataset.field;
+            var val = input.value;
+            if (field === 'position') val = Number(val) || 0;
+            if (field === 'price') val = val === '' ? null : Number(val);
+            tramos[i][field] = val;
+          });
+        });
+        row.querySelector('[data-remove]').addEventListener('click', async function () {
+          if (t.id && !confirm('¿Eliminar este tramo?')) return;
+          if (t.id) {
+            var res = await sb.from('ticket_tramos').delete().eq('id', t.id);
+            if (res.error) return alert('Error: ' + res.error.message);
+          }
+          tramos.splice(i, 1);
+          renderRows();
+        });
+        rows.appendChild(row);
+      });
+    }
+    renderRows();
+
+    var addBtn = el('<button class="secondary" style="margin-top:10px">+ Añadir tramo</button>');
+    section.appendChild(addBtn);
+    addBtn.addEventListener('click', function () {
+      tramos.push({ event_id: eventId, position: tramos.length + 1, label: 'Tramo ' + (tramos.length + 1), price: null, status: 'proximamente', description: '', cta_text: 'Comprar ahora' });
+      renderRows();
+    });
+
+    var msg = el('<p id="tramos-msg"></p>');
+    var saveBtn = el('<button style="margin-top:10px;margin-left:10px">Guardar tramos</button>');
+    section.appendChild(saveBtn);
+    section.appendChild(msg);
+    saveBtn.addEventListener('click', async function () {
+      var upserts = tramos.map(function (t) { return Object.assign({}, t, { event_id: eventId }); });
+      var res = await sb.from('ticket_tramos').upsert(upserts).select();
+      if (res.error) { msg.textContent = 'Error: ' + res.error.message; msg.className = 'error'; return; }
+      tramos = res.data.sort(function (a, b) { return a.position - b.position; });
+      renderRows();
+      msg.textContent = 'Tramos guardados.';
+      msg.className = 'ok';
+    });
+  }
+
+  function renderArtistsSection(eventId) {
+    var section = el('<div class="card"><h2>Line-up</h2><div id="artists-rows"></div></div>');
+    $app.appendChild(section);
+    var rows = section.querySelector('#artists-rows');
+
+    function renderRows() {
+      rows.innerHTML = '';
+      artistsList.forEach(function (a, i) {
+        var row = el(
+          '<div class="row-edit">' +
+          '<input type="number" class="w-orden" value="' + a.position + '" title="Orden" data-field="position">' +
+          '<input class="w-label" value="' + attr(a.name) + '" placeholder="Nombre del artista" data-field="name">' +
+          '<input class="w-price" value="' + attr(a.genre_tag) + '" placeholder="Old School" data-field="genre_tag">' +
+          '<input class="w-cta" value="' + attr(a.badge) + '" placeholder="Cabeza de cartel (opcional)" data-field="badge">' +
+          '<label class="checkbox"><input type="checkbox" ' + (a.confirmed ? 'checked' : '') + ' data-field="confirmed"> Confirmado</label>' +
+          '<button type="button" class="danger small" data-remove>Eliminar</button>' +
+          '</div>'
+        );
+        row.querySelectorAll('[data-field]').forEach(function (input) {
+          input.addEventListener('input', function () {
+            var field = input.dataset.field;
+            var val = input.type === 'checkbox' ? input.checked : input.value;
+            if (field === 'position') val = Number(val) || 0;
+            artistsList[i][field] = val;
+          });
+        });
+        row.querySelector('[data-remove]').addEventListener('click', async function () {
+          if (a.id && !confirm('¿Eliminar este artista?')) return;
+          if (a.id) {
+            var res = await sb.from('artists').delete().eq('id', a.id);
+            if (res.error) return alert('Error: ' + res.error.message);
+          }
+          artistsList.splice(i, 1);
+          renderRows();
+        });
+        rows.appendChild(row);
+      });
+    }
+    renderRows();
+
+    var addBtn = el('<button class="secondary" style="margin-top:10px">+ Añadir artista</button>');
+    section.appendChild(addBtn);
+    addBtn.addEventListener('click', function () {
+      artistsList.push({ event_id: eventId, position: artistsList.length + 1, name: '', genre_tag: '', badge: '', confirmed: true });
+      renderRows();
+    });
+
+    var msg = el('<p id="artists-msg"></p>');
+    var saveBtn = el('<button style="margin-top:10px;margin-left:10px">Guardar line-up</button>');
+    section.appendChild(saveBtn);
+    section.appendChild(msg);
+    saveBtn.addEventListener('click', async function () {
+      var upserts = artistsList.map(function (a) { return Object.assign({}, a, { event_id: eventId }); });
+      var res = await sb.from('artists').upsert(upserts).select();
+      if (res.error) { msg.textContent = 'Error: ' + res.error.message; msg.className = 'error'; return; }
+      artistsList = res.data.sort(function (a, b) { return a.position - b.position; });
+      renderRows();
+      msg.textContent = 'Line-up guardado.';
+      msg.className = 'ok';
+    });
+  }
+
+  document.getElementById('logout-btn').addEventListener('click', async function () {
+    await sb.auth.signOut();
+  });
+
+  boot();
+})();
+</script>
+</body>
+</html>
