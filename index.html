@@ -23,7 +23,7 @@
   @keyframes tr-ticker { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
   @keyframes tr-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
   @keyframes tr-bar { 0%,100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
-  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+  @media (prefers-reduced-motion: reduce) { *:not(.tr-ticker) { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 </style>
 </helmet>
 
@@ -112,7 +112,7 @@
   </section>
 
   <div style="background:#F0113A;padding:14px 0;overflow:hidden;white-space:nowrap;border-top:1px solid rgba(0,0,0,.25);border-bottom:1px solid rgba(0,0,0,.25)">
-    <div ref="{{ tickerRef }}" style="display:inline-flex;gap:0;animation:tr-ticker 34s linear infinite;will-change:transform">
+    <div ref="{{ tickerRef }}" class="tr-ticker" style="display:inline-flex;gap:0;animation:tr-ticker 34s linear infinite;will-change:transform">
       <span style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(14px,2.4vw,22px);letter-spacing:.06em;text-transform:uppercase;color:#0A0A0C;padding-right:26px">No music, no life&nbsp; ·&nbsp; Rafa XL&nbsp; ·&nbsp; Old School&nbsp; ·&nbsp; RTS&nbsp; ·&nbsp; Roberts Total Sound&nbsp; ·&nbsp; Somos Rememberos Hasta la Médula&nbsp; ·&nbsp;</span>
       <span style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(14px,2.4vw,22px);letter-spacing:.06em;text-transform:uppercase;color:#0A0A0C;padding-right:26px">No music, no life&nbsp; ·&nbsp; Rafa XL&nbsp; ·&nbsp; Old School&nbsp; ·&nbsp; RTS&nbsp; ·&nbsp; Roberts Total Sound&nbsp; ·&nbsp; Somos Rememberos Hasta la Médula&nbsp; ·&nbsp;</span>
     </div>
@@ -128,14 +128,15 @@
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:clamp(12px,1.6vw,20px)">
 
-        <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#0E0E12;opacity:.62">
+        <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#0E0E12">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#8B8B96">Tramo 1</span>
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#0A0A0C;background:#8B8B96;padding:5px 10px;border-radius:999px">Agotado</span>
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#F7F7F9">Tramo 1</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:#F0113A;padding:5px 10px;border-radius:999px">
+              <span style="width:6px;height:6px;border-radius:50%;background:#fff;display:block;animation:tr-pulse 1.4s ease-in-out infinite"></span>Disponible</span>
           </div>
-          <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(40px,5vw,58px);line-height:1;color:#8B8B96;text-decoration:line-through;text-decoration-thickness:3px">10 €</div>
-          <p style="margin:0;font-size:14px;line-height:1.55;color:#8B8B96">Entrada anticipada. Vendido al completo.</p>
-          <span style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;border:1px solid rgba(255,255,255,.14);color:#77777F;font-family:Archivo,sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase">Sin disponibilidad</span>
+          <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(40px,5vw,58px);line-height:1;color:#F7F7F9">10 €</div>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:#D3D3DA">Entrada anticipada. Acceso de 17:00h a 00:00h.</p>
+          <a href="https://wa.me/34640129711?text=Quiero%20entradas%20del%20Tramo%201%20para%20Tardeo%20Remember" target="_blank" rel="noopener" style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;background:#F0113A;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase" style-hover="background:#FF3355">Comprar ahora</a>
         </article>
 
         <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px solid #F0113A;background:linear-gradient(180deg,rgba(240,17,58,.16),rgba(240,17,58,.03)),#0E0E12;box-shadow:0 0 0 1px rgba(240,17,58,.25),0 24px 60px -30px rgba(240,17,58,.8)">
@@ -192,7 +193,7 @@
     <div style="max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(24px,4vw,44px)">
       <div style="display:flex;flex-direction:column;gap:14px">
         <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#F0113A">Artistas</span>
-        <h2 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(34px,7vw,84px);line-height:.92;letter-spacing:-.03em;text-transform:uppercase;color:#F7F7F9">Line-up</h2>
+        <h2 style="margin:0;font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(22px,3vw,34px);line-height:1;letter-spacing:.02em;text-transform:uppercase;color:#D3D3DA">Line-up</h2>
       </div>
 
       <div style="display:flex;flex-direction:column">
@@ -328,11 +329,17 @@ class Component extends DCLogic {
     this.applyTicker();
   }
 
-  componentDidUpdate() { this.applyTicker(); }
+  componentDidUpdate(prevProps, prevState) {
+    this.applyTicker();
+    if (prevState.menuOpen !== this.state.menuOpen) {
+      document.body.style.overflow = this.state.menuOpen ? 'hidden' : '';
+    }
+  }
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.onResize);
     if (this.logoTimer) clearInterval(this.logoTimer);
+    document.body.style.overflow = '';
   }
 
   applyTicker() {
