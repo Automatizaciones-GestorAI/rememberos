@@ -265,10 +265,20 @@
         '<div class="row event-row">' +
         '<div class="row-main"><strong>' + escapeHtml(ev.title) + '</strong>' +
         '<span class="muted">' + escapeHtml(ev.event_date) + ' · ' + escapeHtml(ev.venue_name || 'Sin lugar') + '</span></div>' +
+        '<div style="display:flex;align-items:center;gap:10px">' +
         '<span class="badge badge-' + ev.status + '">' + (STATUS_LABELS[ev.status] || ev.status) + '</span>' +
+        '<button type="button" class="danger small" data-delete-event>Eliminar</button>' +
+        '</div>' +
         '</div>'
       );
       row.addEventListener('click', function () { openEvent(ev.id); });
+      row.querySelector('[data-delete-event]').addEventListener('click', async function (e) {
+        e.stopPropagation();
+        if (!confirm('¿Eliminar "' + ev.title + '" y todos sus tramos/artistas? Esto no se puede deshacer.')) return;
+        var delRes = await sb.from('events').delete().eq('id', ev.id);
+        if (delRes.error) return alert('Error: ' + delRes.error.message);
+        renderEventsList();
+      });
       rows.appendChild(row);
     });
     var newBtn = el('<button id="new-event-btn" class="secondary" style="margin-top:16px">+ Nuevo evento</button>');
