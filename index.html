@@ -341,7 +341,7 @@ function formatPrice(n) {
 
 function heroUrlFor(sb, path) {
   if (!path) return '';
-  if (/^https?:\/\//.test(path)) return path;
+  if (/^https?:\/\//.test(path) || path.indexOf('uploads/') === 0) return path;
   return sb.storage.from('event-images').getPublicUrl(path).data.publicUrl;
 }
 
