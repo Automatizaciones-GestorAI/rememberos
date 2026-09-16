@@ -343,26 +343,16 @@ class Component extends DCLogic {
   }
 
   lockScroll() {
-    this.scrollY = window.scrollY || window.pageYOffset || 0;
-    const b = document.body.style;
-    b.position = 'fixed';
-    b.top = -this.scrollY + 'px';
-    b.left = '0';
-    b.right = '0';
-    b.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
     this.blockTouch = (e) => e.preventDefault();
     document.addEventListener('touchmove', this.blockTouch, { passive: false });
   }
 
   unlockScroll() {
     if (this.blockTouch) { document.removeEventListener('touchmove', this.blockTouch); this.blockTouch = null; }
-    const b = document.body.style;
-    b.position = '';
-    b.top = '';
-    b.left = '';
-    b.right = '';
-    b.overflow = '';
-    window.scrollTo(0, this.scrollY || 0);
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
   }
 
   applyTicker() {
