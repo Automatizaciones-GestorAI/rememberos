@@ -350,9 +350,12 @@ class Component extends DCLogic {
     b.left = '0';
     b.right = '0';
     b.overflow = 'hidden';
+    this.blockTouch = (e) => e.preventDefault();
+    document.addEventListener('touchmove', this.blockTouch, { passive: false });
   }
 
   unlockScroll() {
+    if (this.blockTouch) { document.removeEventListener('touchmove', this.blockTouch); this.blockTouch = null; }
     const b = document.body.style;
     b.position = '';
     b.top = '';
