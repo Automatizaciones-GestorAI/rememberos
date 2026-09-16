@@ -10,6 +10,8 @@
 <helmet>
 <link rel="stylesheet" href="_ds/nocturne-f39b7ecd-4fa1-4949-b43b-fcab6a117040/styles.css">
 <script src="_ds/nocturne-f39b7ecd-4fa1-4949-b43b-fcab6a117040/_ds_bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
@@ -40,6 +42,9 @@
         <a href="#inicio" style="font-family:Archivo,sans-serif;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#F2F2F4" style-hover="color:#F0113A">Inicio</a>
         <a href="#entradas" style="font-family:Archivo,sans-serif;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#F2F2F4" style-hover="color:#F0113A">Entradas</a>
         <a href="#artistas" style="font-family:Archivo,sans-serif;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#F2F2F4" style-hover="color:#F0113A">Artistas</a>
+        <sc-if value="{{ upcomingEvents.length }}">
+          <a href="#proximos" style="font-family:Archivo,sans-serif;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#F2F2F4" style-hover="color:#F0113A">Próximos</a>
+        </sc-if>
         <a href="#info" style="font-family:Archivo,sans-serif;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#F2F2F4" style-hover="color:#F0113A">Info</a>
       </nav>
     </sc-if>
@@ -66,17 +71,20 @@
         <a href="#inicio" onClick="{{ closeMenu }}" style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(34px,11vw,56px);line-height:1.1;letter-spacing:-.02em;text-transform:uppercase;color:#F2F2F4;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">Inicio</a>
         <a href="#entradas" onClick="{{ closeMenu }}" style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(34px,11vw,56px);line-height:1.1;letter-spacing:-.02em;text-transform:uppercase;color:#F2F2F4;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">Entradas</a>
         <a href="#artistas" onClick="{{ closeMenu }}" style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(34px,11vw,56px);line-height:1.1;letter-spacing:-.02em;text-transform:uppercase;color:#F2F2F4;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">Artistas</a>
+        <sc-if value="{{ upcomingEvents.length }}">
+          <a href="#proximos" onClick="{{ closeMenu }}" style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(34px,11vw,56px);line-height:1.1;letter-spacing:-.02em;text-transform:uppercase;color:#F2F2F4;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">Próximos</a>
+        </sc-if>
         <a href="#info" onClick="{{ closeMenu }}" style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(34px,11vw,56px);line-height:1.1;letter-spacing:-.02em;text-transform:uppercase;color:#F2F2F4;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">Info</a>
       </nav>
       <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px">
         <a href="#entradas" onClick="{{ closeMenu }}" style="display:flex;align-items:center;justify-content:center;height:56px;border-radius:999px;background:#F0113A;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:14px;letter-spacing:.1em;text-transform:uppercase">Comprar entradas</a>
-        <a href="https://wa.me/34640129711" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;height:56px;border-radius:999px;border:1px solid rgba(255,255,255,.22);color:#F2F2F4;font-family:Archivo,sans-serif;font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase">WhatsApp 640 12 97 11</a>
+        <a href="{{ event.whatsappHref }}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;height:56px;border-radius:999px;border:1px solid rgba(255,255,255,.22);color:#F2F2F4;font-family:Archivo,sans-serif;font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase">WhatsApp {{ event.whatsappDisplay }}</a>
       </div>
     </div>
   </sc-if>
 
   <section id="inicio" data-screen-label="Hero" style="position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;padding:120px clamp(16px,5vw,64px) clamp(32px,5vw,64px);background:#08080A">
-    <div style="position:absolute;inset:0;background-image:url('uploads/foto-tardeo-limpia.jpg');background-size:cover;background-position:50% 56%;background-repeat:no-repeat;filter:brightness(1.05) contrast(1.02) saturate(.7) sepia(.12) hue-rotate(-10deg);pointer-events:none"></div>
+    <div style="position:absolute;inset:0;background-image:url('{{ event.heroImageUrl }}');background-size:cover;background-position:50% 56%;background-repeat:no-repeat;filter:brightness(1.05) contrast(1.02) saturate(.7) sepia(.12) hue-rotate(-10deg);pointer-events:none"></div>
     <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 40%,rgba(214,17,42,.22) 0%,rgba(214,17,42,.06) 45%,rgba(8,8,10,0) 75%);mix-blend-mode:screen;pointer-events:none"></div>
     <div style="position:absolute;inset:0;background:linear-gradient(to top,#08080A 1%,rgba(8,8,10,.8) 20%,rgba(8,8,10,.42) 55%,rgba(8,8,10,.2) 100%);pointer-events:none"></div>
     <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(8,8,10,.7) 0%,rgba(8,8,10,.12) 25%,rgba(8,8,10,0) 50%,rgba(8,8,10,.12) 75%,rgba(8,8,10,.7) 100%);pointer-events:none"></div>
@@ -84,23 +92,23 @@
     <div style="position:relative;display:flex;flex-direction:column;gap:clamp(20px,3vw,34px);max-width:1400px;margin:0 auto;width:100%">
       <div style="display:flex;align-items:center;gap:12px">
         <span style="width:clamp(28px,6vw,72px);height:2px;background:#F0113A;display:block"></span>
-        <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(10px,2.4vw,13px);letter-spacing:.24em;text-transform:uppercase;color:#F0113A">Old School · Remember Session</span>
+        <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(10px,2.4vw,13px);letter-spacing:.24em;text-transform:uppercase;color:#F0113A">{{ event.subtitle }}</span>
       </div>
 
-      <h1 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(52px,13.5vw,196px);line-height:.84;letter-spacing:-.035em;text-transform:uppercase;color:#F7F7F9;text-shadow:0 0 70px rgba(240,17,58,.4)">Tardeo<br>Remember</h1>
+      <h1 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(44px,11.5vw,168px);line-height:.94;letter-spacing:-.035em;text-transform:uppercase;color:#F7F7F9;text-shadow:0 0 70px rgba(240,17,58,.4)">{{ event.title }}</h1>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:1px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);border-radius:14px;overflow:hidden;max-width:960px">
         <div style="background:rgba(10,10,12,.72);backdrop-filter:blur(6px);padding:18px 20px;display:flex;flex-direction:column;gap:7px">
           <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Fecha</span>
-          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(16px,2.2vw,20px);line-height:1.15;color:#F2F2F4">Sábado 14 de noviembre</span>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(16px,2.2vw,20px);line-height:1.15;color:#F2F2F4">{{ event.dateLabel }}</span>
         </div>
         <div style="background:rgba(10,10,12,.72);backdrop-filter:blur(6px);padding:18px 20px;display:flex;flex-direction:column;gap:7px">
           <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Lugar</span>
-          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(16px,2.2vw,20px);line-height:1.15;color:#F2F2F4">Coyote Club · Seseña (Toledo)</span>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(16px,2.2vw,20px);line-height:1.15;color:#F2F2F4">{{ event.venueLabel }}</span>
         </div>
         <div style="background:rgba(10,10,12,.72);backdrop-filter:blur(6px);padding:18px 20px;display:flex;flex-direction:column;gap:7px">
           <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Horario</span>
-          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(16px,2.2vw,20px);line-height:1.15;color:#F2F2F4">17:00h — 00:00h</span>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(16px,2.2vw,20px);line-height:1.15;color:#F2F2F4">{{ event.timeRange }}</span>
         </div>
       </div>
 
@@ -128,64 +136,77 @@
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:clamp(12px,1.6vw,20px)">
 
-        <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#0E0E12">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#F7F7F9">Tramo 1</span>
-            <span style="display:inline-flex;align-items:center;gap:6px;font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:#F0113A;padding:5px 10px;border-radius:999px">
-              <span style="width:6px;height:6px;border-radius:50%;background:#fff;display:block;animation:tr-pulse 1.4s ease-in-out infinite"></span>Disponible</span>
-          </div>
-          <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(40px,5vw,58px);line-height:1;color:#F7F7F9">10 €</div>
-          <p style="margin:0;font-size:14px;line-height:1.55;color:#D3D3DA">Entrada anticipada. Acceso de 17:00h a 00:00h.</p>
-          <a href="https://wa.me/34640129711?text=Quiero%20entradas%20del%20Tramo%201%20para%20Tardeo%20Remember" target="_blank" rel="noopener" style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;background:#F0113A;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase" style-hover="background:#FF3355">Comprar ahora</a>
-        </article>
+        <sc-for list="{{ tramos }}" as="tramo">
 
-        <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px solid #F0113A;background:linear-gradient(180deg,rgba(240,17,58,.16),rgba(240,17,58,.03)),#0E0E12;box-shadow:0 0 0 1px rgba(240,17,58,.25),0 24px 60px -30px rgba(240,17,58,.8)">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#F7F7F9">Tramo 2</span>
-            <span style="display:inline-flex;align-items:center;gap:6px;font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:#F0113A;padding:5px 10px;border-radius:999px">
-              <span style="width:6px;height:6px;border-radius:50%;background:#fff;display:block;animation:tr-pulse 1.4s ease-in-out infinite"></span>Disponible</span>
-          </div>
-          <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(40px,5vw,58px);line-height:1;color:#F7F7F9">13 €</div>
-          <p style="margin:0;font-size:14px;line-height:1.55;color:#D3D3DA">Entrada <strong style="color:#fff;font-weight:600">+ consumición incluida</strong>. Acceso de 17:00h a 00:00h.</p>
-          <a href="https://wa.me/34640129711?text=Quiero%20entradas%20del%20Tramo%202%20para%20Tardeo%20Remember" target="_blank" rel="noopener" style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;background:#F0113A;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase" style-hover="background:#FF3355">Comprar ahora</a>
-        </article>
+          <sc-if value="{{ tramo.status === 'disponible' }}" hint-placeholder-val="{{ true }}">
+            <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px solid #F0113A;background:linear-gradient(180deg,rgba(240,17,58,.16),rgba(240,17,58,.03)),#0E0E12;box-shadow:0 0 0 1px rgba(240,17,58,.25),0 24px 60px -30px rgba(240,17,58,.8)">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#F7F7F9">{{ tramo.label }}</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:#F0113A;padding:5px 10px;border-radius:999px">
+                  <span style="width:6px;height:6px;border-radius:50%;background:#fff;display:block;animation:tr-pulse 1.4s ease-in-out infinite"></span>Disponible</span>
+              </div>
+              <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(40px,5vw,58px);line-height:1;color:#F7F7F9">{{ tramo.priceLabel }}</div>
+              <p style="margin:0;font-size:14px;line-height:1.55;color:#D3D3DA">{{ tramo.description }}</p>
+              <a href="{{ tramo.whatsappHref }}" target="_blank" rel="noopener" style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;background:#F0113A;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase" style-hover="background:#FF3355">{{ tramo.ctaText }}</a>
+            </article>
+          </sc-if>
 
-        <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#0E0E12">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#F7F7F9">Tramo 3</span>
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#F0113A;border:1px solid rgba(240,17,58,.5);padding:4px 10px;border-radius:999px">Próximamente</span>
-          </div>
-          <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(28px,3.4vw,40px);line-height:1;color:#F7F7F9">Precio por<br>anunciar</div>
-          <p style="margin:0;font-size:14px;line-height:1.55;color:#A5A5B0">Se abrirá cuando el Tramo 2 se agote. Avisamos en Instagram.</p>
-          <span style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;border:1px solid rgba(255,255,255,.18);color:#D3D3DA;font-family:Archivo,sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase">Muy pronto</span>
-        </article>
+          <sc-if value="{{ tramo.status === 'agotado' }}">
+            <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#0E0E12;opacity:.62">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#8B8B96">{{ tramo.label }}</span>
+                <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#0A0A0C;background:#8B8B96;padding:5px 10px;border-radius:999px">Agotado</span>
+              </div>
+              <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(40px,5vw,58px);line-height:1;color:#8B8B96;text-decoration:line-through;text-decoration-thickness:3px">{{ tramo.priceLabel }}</div>
+              <p style="margin:0;font-size:14px;line-height:1.55;color:#8B8B96">{{ tramo.description }}</p>
+              <span style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;border:1px solid rgba(255,255,255,.14);color:#77777F;font-family:Archivo,sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase">Sin disponibilidad</span>
+            </article>
+          </sc-if>
 
-        <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px dashed rgba(240,17,58,.45);background:#0B0B0F">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#F7F7F9">Tramo 4</span>
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#F0113A;border:1px solid rgba(240,17,58,.5);padding:4px 10px;border-radius:999px">Por desvelar</span>
-          </div>
-          <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(28px,3.4vw,40px);line-height:1;color:#F0113A">Artista<br>sorpresa</div>
-          <p style="margin:0;font-size:14px;line-height:1.55;color:#A5A5B0">Un nombre que no esperas. Se anuncia días antes del evento.</p>
-          <span style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;border:1px dashed rgba(240,17,58,.45);color:#F0113A;font-family:Archivo,sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase">Secreto</span>
-        </article>
+          <sc-if value="{{ tramo.status === 'proximamente' }}">
+            <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#0E0E12">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#F7F7F9">{{ tramo.label }}</span>
+                <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#F0113A;border:1px solid rgba(240,17,58,.5);padding:4px 10px;border-radius:999px">Próximamente</span>
+              </div>
+              <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(28px,3.4vw,40px);line-height:1;color:#F7F7F9">{{ tramo.priceLabel }}</div>
+              <p style="margin:0;font-size:14px;line-height:1.55;color:#A5A5B0">{{ tramo.description }}</p>
+              <span style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;border:1px solid rgba(255,255,255,.18);color:#D3D3DA;font-family:Archivo,sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase">{{ tramo.ctaText }}</span>
+            </article>
+          </sc-if>
+
+          <sc-if value="{{ tramo.status === 'secreto' }}">
+            <article style="position:relative;display:flex;flex-direction:column;gap:18px;padding:26px 24px 24px;border-radius:16px;border:1px dashed rgba(240,17,58,.45);background:#0B0B0F">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#F7F7F9">{{ tramo.label }}</span>
+                <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#F0113A;border:1px solid rgba(240,17,58,.5);padding:4px 10px;border-radius:999px">Por desvelar</span>
+              </div>
+              <div style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(28px,3.4vw,40px);line-height:1;color:#F0113A">{{ tramo.label }}</div>
+              <p style="margin:0;font-size:14px;line-height:1.55;color:#A5A5B0">{{ tramo.description }}</p>
+              <span style="margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;border:1px dashed rgba(240,17,58,.45);color:#F0113A;font-family:Archivo,sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase">{{ tramo.ctaText }}</span>
+            </article>
+          </sc-if>
+
+        </sc-for>
 
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:clamp(16px,2vw,32px);align-items:center;padding:clamp(24px,3.5vw,44px);border-radius:18px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(120deg,rgba(240,17,58,.1),transparent 60%),#0D0A14">
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#F0113A">Reservados</span>
-          <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(26px,3.6vw,44px);line-height:1;letter-spacing:-.02em;text-transform:uppercase;color:#F7F7F9">5 personas + botella<br>+ 8 refrescos</h3>
-          <p style="margin:0;max-width:44ch;font-size:14px;line-height:1.6;color:#A5A5B0">Zona reservada con mesa propia. Plazas limitadas: se confirman por orden de reserva.</p>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:14px;align-items:flex-start">
-          <div style="display:flex;align-items:baseline;gap:8px">
-            <span style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(52px,8vw,88px);line-height:.9;color:#F0113A">100</span>
-            <span style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(24px,3vw,34px);color:#F0113A">€</span>
+      <sc-if value="{{ event.reservedTitle }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:clamp(16px,2vw,32px);align-items:center;padding:clamp(24px,3.5vw,44px);border-radius:18px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(120deg,rgba(240,17,58,.1),transparent 60%),#0D0A14">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#F0113A">Reservados</span>
+            <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(26px,3.6vw,44px);line-height:1;letter-spacing:-.02em;text-transform:uppercase;color:#F7F7F9">{{ event.reservedTitle }}</h3>
+            <p style="margin:0;max-width:44ch;font-size:14px;line-height:1.6;color:#A5A5B0">{{ event.reservedDescription }}</p>
           </div>
-          <a href="https://wa.me/34640129711?text=Quiero%20reservar%20un%20reservado%20para%20Tardeo%20Remember" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 28px;border-radius:999px;background:#F0113A;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 0 36px rgba(240,17,58,.4)" style-hover="background:#FF3355">Reservar por WhatsApp</a>
+          <div style="display:flex;flex-direction:column;gap:14px;align-items:flex-start">
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(52px,8vw,88px);line-height:.9;color:#F0113A">{{ event.reservedPrice }}</span>
+              <span style="font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(24px,3vw,34px);color:#F0113A">€</span>
+            </div>
+            <a href="{{ event.reservedWhatsappHref }}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 28px;border-radius:999px;background:#F0113A;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 0 36px rgba(240,17,58,.4)" style-hover="background:#FF3355">Reservar por WhatsApp</a>
+          </div>
         </div>
-      </div>
+      </sc-if>
     </div>
   </section>
 
@@ -197,38 +218,44 @@
       </div>
 
       <div style="display:flex;flex-direction:column">
-        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 18px;align-items:center;padding:clamp(20px,2.6vw,30px) 0;border-top:1px solid rgba(255,255,255,.12)">
-          <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;min-width:0">
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;color:#F0113A">01</span>
-            <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(30px,6.5vw,72px);line-height:.95;letter-spacing:-.02em;text-transform:uppercase;color:#F7F7F9">Rafa XL</h3>
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:#F0113A;padding:5px 10px;border-radius:999px">Cabeza de cartel</span>
+        <sc-for list="{{ artists }}" as="artist">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 18px;align-items:center;padding:clamp(20px,2.6vw,30px) 0;border-top:1px solid rgba(255,255,255,.12)">
+            <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;min-width:0">
+              <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;color:{{ artist.numberColor }}">{{ artist.index }}</span>
+              <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(26px,5.5vw,64px);line-height:.95;letter-spacing:-.02em;text-transform:uppercase;color:{{ artist.nameColor }}">{{ artist.name }}</h3>
+              <sc-if value="{{ artist.badge }}">
+                <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:#F0113A;padding:5px 10px;border-radius:999px">{{ artist.badge }}</span>
+              </sc-if>
+            </div>
+            <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(11px,1.4vw,13px);letter-spacing:.16em;text-transform:uppercase;color:{{ artist.tagColor }};text-align:right">{{ artist.genreLabel }}</span>
           </div>
-          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(11px,1.4vw,13px);letter-spacing:.16em;text-transform:uppercase;color:#A5A5B0;text-align:right">Old School</span>
-        </div>
-        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 18px;align-items:center;padding:clamp(20px,2.6vw,30px) 0;border-top:1px solid rgba(255,255,255,.12)">
-          <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;min-width:0">
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;color:#F0113A">02</span>
-            <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(26px,5.2vw,58px);line-height:.95;letter-spacing:-.02em;text-transform:uppercase;color:#F7F7F9">RTS · Roberts Total Sound</h3>
-          </div>
-          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(11px,1.4vw,13px);letter-spacing:.16em;text-transform:uppercase;color:#A5A5B0;text-align:right">Old School</span>
-        </div>
-        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 18px;align-items:center;padding:clamp(20px,2.6vw,30px) 0;border-top:1px solid rgba(255,255,255,.12)">
-          <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;min-width:0">
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;color:#45454E">03</span>
-            <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(26px,5vw,56px);line-height:.95;letter-spacing:-.02em;text-transform:uppercase;color:#45454E">Por confirmar</h3>
-          </div>
-          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(11px,1.4vw,13px);letter-spacing:.16em;text-transform:uppercase;color:#6D6D77;text-align:right">Pronto</span>
-        </div>
-        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 18px;align-items:center;padding:clamp(20px,2.6vw,30px) 0;border-top:1px solid rgba(255,255,255,.12);border-bottom:1px solid rgba(255,255,255,.12)">
-          <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;min-width:0">
-            <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:12px;color:#45454E">04</span>
-            <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(26px,5vw,56px);line-height:.95;letter-spacing:-.02em;text-transform:uppercase;color:#45454E">Por confirmar</h3>
-          </div>
-          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(11px,1.4vw,13px);letter-spacing:.16em;text-transform:uppercase;color:#6D6D77;text-align:right">Pronto</span>
-        </div>
+        </sc-for>
       </div>
     </div>
   </section>
+
+  <sc-if value="{{ upcomingEvents.length }}">
+    <section id="proximos" data-screen-label="Proximos eventos" style="padding:clamp(56px,8vw,120px) clamp(16px,5vw,64px);background:#08080A;border-top:1px solid rgba(255,255,255,.07)">
+      <div style="max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(24px,4vw,44px)">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#F0113A">Agenda</span>
+          <h2 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(34px,7vw,84px);line-height:.92;letter-spacing:-.03em;text-transform:uppercase;color:#F7F7F9">Próximos eventos</h2>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:clamp(12px,1.6vw,20px)">
+          <sc-for list="{{ upcomingEvents }}" as="upcoming">
+            <article style="position:relative;display:flex;flex-direction:column;gap:14px;padding:22px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#0E0E12;overflow:hidden">
+              <div style="position:absolute;inset:0;background-image:url('{{ upcoming.heroImageUrl }}');background-size:cover;background-position:center;opacity:.22;pointer-events:none"></div>
+              <div style="position:relative;display:flex;flex-direction:column;gap:10px">
+                <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#F0113A">{{ upcoming.dateLabel }}</span>
+                <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(24px,3.4vw,36px);line-height:1;letter-spacing:-.02em;text-transform:uppercase;color:#F7F7F9">{{ upcoming.title }}</h3>
+                <span style="font-size:13px;color:#A5A5B0">{{ upcoming.venueLabel }}</span>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </sc-if>
 
   <section id="info" data-screen-label="CTA final" style="background:#F0113A;padding:clamp(48px,7vw,104px) clamp(16px,5vw,64px)">
     <div style="max-width:1400px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:clamp(28px,4vw,56px);align-items:center">
@@ -236,22 +263,22 @@
         <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#1A0206">Todo listo</span>
         <h2 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(38px,7.4vw,90px);line-height:.88;letter-spacing:-.035em;text-transform:uppercase;color:#0A0A0C">Tú solo tienes<br>que venir.</h2>
         <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:6px">
-          <a href="https://wa.me/34640129711?text=Quiero%20entradas%20para%20Tardeo%20Remember" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 30px;border-radius:999px;background:#0A0A0C;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase" style-hover="background:#1A1A20">Comprar entradas</a>
-          <a href="https://wa.me/34640129711" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; justify-content: center; min-height: 56px; padding: 0 30px; border-radius: 999px; border: 2px solid #0A0A0C; color: #000000; font-family: Archivo,sans-serif; font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; background-color: #00FF01" style-hover="background:#0A0A0C;color:#fff">WhatsApp 640 12 97 11</a>
+          <a href="{{ event.buyWhatsappHref }}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 30px;border-radius:999px;background:#0A0A0C;color:#fff;font-family:Archivo,sans-serif;font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase" style-hover="background:#1A1A20">Comprar entradas</a>
+          <a href="{{ event.whatsappHref }}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; justify-content: center; min-height: 56px; padding: 0 30px; border-radius: 999px; border: 2px solid #0A0A0C; color: #000000; font-family: Archivo,sans-serif; font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; background-color: #00FF01" style-hover="background:#0A0A0C;color:#fff">WhatsApp {{ event.whatsappDisplay }}</a>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:12px">
         <div style="background:#0A0A0C;border-radius:14px;padding:22px 20px;display:flex;flex-direction:column;gap:10px">
           <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Fecha</span>
-          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(15px,1.8vw,19px);line-height:1.2;color:#F7F7F9">Sábado 14 de noviembre</span>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(15px,1.8vw,19px);line-height:1.2;color:#F7F7F9">{{ event.dateLabel }}</span>
         </div>
         <div style="background:#0A0A0C;border-radius:14px;padding:22px 20px;display:flex;flex-direction:column;gap:10px">
           <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Lugar</span>
-          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(15px,1.8vw,19px);line-height:1.2;color:#F7F7F9">Coyote Club<br>Seseña (Toledo)</span>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(15px,1.8vw,19px);line-height:1.2;color:#F7F7F9">{{ event.venueName }}<br>{{ event.venueLocation }}</span>
         </div>
         <div style="background:#0A0A0C;border-radius:14px;padding:22px 20px;display:flex;flex-direction:column;gap:10px">
           <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Horario</span>
-          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(15px,1.8vw,19px);line-height:1.2;color:#F7F7F9">17:00h — 00:00h</span>
+          <span style="font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(15px,1.8vw,19px);line-height:1.2;color:#F7F7F9">{{ event.timeRange }}</span>
         </div>
       </div>
     </div>
@@ -271,8 +298,8 @@
       </nav>
       <div style="display:flex;flex-direction:column;gap:10px">
         <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#F0113A">Contacto</span>
-        <a href="https://wa.me/34640129711" target="_blank" rel="noopener" style="font-family:Archivo,sans-serif;font-weight:700;font-size:16px;color:#F2F2F4" style-hover="color:#F0113A">640 12 97 11</a>
-        <span style="font-size:13px;line-height:1.5;color:#A5A5B0">Coyote Club · Seseña (Toledo)</span>
+        <a href="{{ event.whatsappHref }}" target="_blank" rel="noopener" style="font-family:Archivo,sans-serif;font-weight:700;font-size:16px;color:#F2F2F4" style-hover="color:#F0113A">{{ event.whatsappDisplay }}</a>
+        <span style="font-size:13px;line-height:1.5;color:#A5A5B0">{{ event.venueLabel }}</span>
       </div>
     </div>
     <div style="max-width:1400px;margin:28px auto 0;padding-top:20px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between">
@@ -283,8 +310,143 @@
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;tickerSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:12,&quot;max&quot;:70,&quot;step&quot;:2,&quot;default&quot;:34,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Movimiento&quot;}}">
+const MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const DAYS_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+function formatEventDateEs(iso) {
+  if (!iso) return '';
+  const parts = iso.split('-').map(Number);
+  const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+  const day = DAYS_ES[dt.getDay()];
+  return day.charAt(0).toUpperCase() + day.slice(1) + ' ' + parts[2] + ' de ' + MONTHS_ES[parts[1] - 1];
+}
+
+function waHref(number, text) {
+  if (!number) return '#';
+  return 'https://wa.me/' + number + (text ? '?text=' + encodeURIComponent(text) : '');
+}
+
+function formatPhoneDisplay(raw) {
+  if (!raw) return '';
+  const digits = String(raw).replace(/\D/g, '');
+  const local = digits.length > 9 ? digits.slice(-9) : digits;
+  const m = local.match(/^(\d{3})(\d{2})(\d{2})(\d{2})$/);
+  return m ? m[1] + ' ' + m[2] + ' ' + m[3] + ' ' + m[4] : local;
+}
+
+function formatPrice(n) {
+  const num = Number(n);
+  return Number.isInteger(num) ? String(num) : num.toFixed(2);
+}
+
+function heroUrlFor(sb, path) {
+  if (!path) return '';
+  if (/^https?:\/\//.test(path)) return path;
+  return sb.storage.from('event-images').getPublicUrl(path).data.publicUrl;
+}
+
+function transformEvent(ev, sb) {
+  const venueName = ev.venue_name || '';
+  const venueLocation = ev.venue_location || '';
+  const title = ev.title || '';
+  return {
+    title: title,
+    subtitle: ev.subtitle || '',
+    dateLabel: formatEventDateEs(ev.event_date),
+    timeRange: ev.time_range || '',
+    venueName: venueName,
+    venueLocation: venueLocation,
+    venueLabel: [venueName, venueLocation].filter(Boolean).join(' · '),
+    heroImageUrl: heroUrlFor(sb, ev.hero_image_url),
+    whatsappHref: waHref(ev.whatsapp_number, ''),
+    whatsappDisplay: formatPhoneDisplay(ev.whatsapp_number),
+    buyWhatsappHref: waHref(ev.whatsapp_number, 'Quiero entradas para ' + title),
+    reservedTitle: ev.reserved_title || '',
+    reservedPrice: ev.reserved_price == null ? '' : ev.reserved_price,
+    reservedDescription: ev.reserved_description || '',
+    reservedWhatsappHref: waHref(ev.whatsapp_number, 'Quiero reservar un reservado para ' + title),
+    tickerSeconds: ev.ticker_seconds == null ? 34 : ev.ticker_seconds
+  };
+}
+
+function transformTramo(t, event) {
+  const label = t.label || '';
+  return {
+    label: label,
+    status: t.status || 'proximamente',
+    priceLabel: t.price == null ? 'Precio por anunciar' : formatPrice(t.price) + ' €',
+    description: t.description || '',
+    ctaText: t.cta_text || 'Comprar ahora',
+    whatsappHref: waHref(event.whatsapp_number, 'Quiero entradas del ' + label + ' para ' + (event.title || ''))
+  };
+}
+
+function transformArtist(a, i) {
+  const confirmed = a.confirmed !== false;
+  return {
+    index: String(i + 1).padStart(2, '0'),
+    name: a.name || '',
+    badge: confirmed ? (a.badge || '') : '',
+    genreLabel: confirmed ? (a.genre_tag || '') : 'Pronto',
+    nameColor: confirmed ? '#F7F7F9' : '#45454E',
+    numberColor: confirmed ? '#F0113A' : '#45454E',
+    tagColor: confirmed ? '#A5A5B0' : '#6D6D77'
+  };
+}
+
+function transformUpcoming(ev, sb) {
+  return {
+    title: ev.title || '',
+    dateLabel: formatEventDateEs(ev.event_date),
+    venueLabel: [ev.venue_name, ev.venue_location].filter(Boolean).join(' · '),
+    heroImageUrl: heroUrlFor(sb, ev.hero_image_url)
+  };
+}
+
+const FALLBACK_EVENT = {
+  title: 'Tardeo Remember',
+  subtitle: 'Old School · Remember Session',
+  dateLabel: 'Sábado 14 de noviembre',
+  timeRange: '17:00h — 00:00h',
+  venueName: 'Coyote Club',
+  venueLocation: 'Seseña (Toledo)',
+  venueLabel: 'Coyote Club · Seseña (Toledo)',
+  heroImageUrl: 'uploads/foto-tardeo-limpia.jpg',
+  whatsappHref: 'https://wa.me/34640129711',
+  whatsappDisplay: '640 12 97 11',
+  buyWhatsappHref: waHref('34640129711', 'Quiero entradas para Tardeo Remember'),
+  reservedTitle: '5 personas + botella + 8 refrescos',
+  reservedPrice: 100,
+  reservedDescription: 'Zona reservada con mesa propia. Plazas limitadas: se confirman por orden de reserva.',
+  reservedWhatsappHref: waHref('34640129711', 'Quiero reservar un reservado para Tardeo Remember'),
+  tickerSeconds: 34
+};
+
+const FALLBACK_TRAMOS = [
+  { label: 'Tramo 1', status: 'disponible', priceLabel: '10 €', description: 'Entrada anticipada. Acceso de 17:00h a 00:00h.', ctaText: 'Comprar ahora', whatsappHref: waHref('34640129711', 'Quiero entradas del Tramo 1 para Tardeo Remember') },
+  { label: 'Tramo 2', status: 'disponible', priceLabel: '13 €', description: 'Entrada + consumición incluida. Acceso de 17:00h a 00:00h.', ctaText: 'Comprar ahora', whatsappHref: waHref('34640129711', 'Quiero entradas del Tramo 2 para Tardeo Remember') },
+  { label: 'Tramo 3', status: 'proximamente', priceLabel: 'Precio por anunciar', description: 'Se abrirá cuando el Tramo 2 se agote. Avisamos en Instagram.', ctaText: 'Muy pronto', whatsappHref: '#' },
+  { label: 'Tramo 4', status: 'secreto', priceLabel: '', description: 'Un nombre que no esperas. Se anuncia días antes del evento.', ctaText: 'Secreto', whatsappHref: '#' }
+];
+
+const FALLBACK_ARTISTS = [
+  { index: '01', name: 'Rafa XL', badge: 'Cabeza de cartel', genreLabel: 'Old School', nameColor: '#F7F7F9', numberColor: '#F0113A', tagColor: '#A5A5B0' },
+  { index: '02', name: 'RTS · Roberts Total Sound', badge: '', genreLabel: 'Old School', nameColor: '#F7F7F9', numberColor: '#F0113A', tagColor: '#A5A5B0' },
+  { index: '03', name: 'Por confirmar', badge: '', genreLabel: 'Pronto', nameColor: '#45454E', numberColor: '#45454E', tagColor: '#6D6D77' },
+  { index: '04', name: 'Por confirmar', badge: '', genreLabel: 'Pronto', nameColor: '#45454E', numberColor: '#45454E', tagColor: '#6D6D77' }
+];
+
+const FALLBACK_UPCOMING = [];
+
 class Component extends DCLogic {
-  state = { menuOpen: false, w: typeof window !== 'undefined' ? window.innerWidth : 1440 };
+  state = {
+    menuOpen: false,
+    w: typeof window !== 'undefined' ? window.innerWidth : 1440,
+    event: FALLBACK_EVENT,
+    tramos: FALLBACK_TRAMOS,
+    artists: FALLBACK_ARTISTS,
+    upcomingEvents: FALLBACK_UPCOMING
+  };
 
   constructor(p) {
     super(p);
@@ -327,11 +489,35 @@ class Component extends DCLogic {
     };
     window.addEventListener('resize', this.onResize);
     this.applyTicker();
+    this.loadFromSupabase();
+  }
+
+  async loadFromSupabase() {
+    const cfg = typeof window !== 'undefined' ? window.SUPABASE_CONFIG : null;
+    if (!cfg || !cfg.url || cfg.url.indexOf('REPLACE_WITH') === 0 || typeof window.supabase === 'undefined') return;
+    try {
+      const sb = window.supabase.createClient(cfg.url, cfg.anonKey);
+      const activeRes = await sb.from('events').select('*').eq('status', 'active').limit(1).maybeSingle();
+      if (activeRes.error || !activeRes.data) return;
+      const activeEvent = activeRes.data;
+      const [tramosRes, artistsRes, upcomingRes] = await Promise.all([
+        sb.from('ticket_tramos').select('*').eq('event_id', activeEvent.id).order('position'),
+        sb.from('artists').select('*').eq('event_id', activeEvent.id).order('position'),
+        sb.from('events').select('*').neq('id', activeEvent.id).neq('status', 'draft').gte('event_date', new Date().toISOString().slice(0, 10)).order('event_date').limit(6)
+      ]);
+      const nextState = { event: transformEvent(activeEvent, sb) };
+      if (!tramosRes.error) nextState.tramos = (tramosRes.data || []).map((t) => transformTramo(t, activeEvent));
+      if (!artistsRes.error) nextState.artists = (artistsRes.data || []).map(transformArtist);
+      if (!upcomingRes.error) nextState.upcomingEvents = (upcomingRes.data || []).map((ev) => transformUpcoming(ev, sb));
+      this.setState(nextState);
+    } catch (e) {
+      console.warn('No se pudieron cargar los datos de Supabase, se mantiene el contenido estático.', e);
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
     this.applyTicker();
-    if (prevState.menuOpen !== this.state.menuOpen) {
+    if (prevState && prevState.menuOpen !== this.state.menuOpen) {
       if (this.state.menuOpen && window.innerWidth < 900) this.lockScroll(); else this.unlockScroll();
     }
   }
@@ -369,7 +555,7 @@ class Component extends DCLogic {
 
   applyTicker() {
     const t = this.tickerRef.current;
-    if (t) t.style.animationDuration = (this.props.tickerSeconds ?? 34) + 's';
+    if (t) t.style.animationDuration = (this.state.event.tickerSeconds ?? this.props.tickerSeconds ?? 34) + 's';
   }
 
   renderVals() {
@@ -382,7 +568,11 @@ class Component extends DCLogic {
       closeMenu: () => this.setState({ menuOpen: false }),
       tickerRef: this.tickerRef,
       logoVideoRef: this.playLogo,
-      logoVideoRef2: this.playLogo
+      logoVideoRef2: this.playLogo,
+      event: this.state.event,
+      tramos: this.state.tramos,
+      artists: this.state.artists,
+      upcomingEvents: this.state.upcomingEvents
     };
   }
 }
