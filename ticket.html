@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Tu entrada · Rememberos Hasta la Médula</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="supabase-config.js"></script>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #08080A; color: #F2F2F4; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+  h1 { font-family: Archivo, sans-serif; font-weight: 900; font-size: clamp(28px, 7vw, 40px); line-height: 1; letter-spacing: -.02em; text-transform: uppercase; margin: 0 0 4px; }
+  .card { width: 100%; max-width: 380px; background: #101014; border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 28px 24px; text-align: center; }
+  .eyebrow { font-family: Archivo, sans-serif; font-weight: 800; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: #F0113A; display: block; margin-bottom: 10px; }
+  .sub { color: #A5A5B0; font-size: 14px; margin: 0 0 22px; }
+  .qr-wrap { background: #fff; border-radius: 16px; padding: 16px; display: inline-flex; margin-bottom: 22px; }
+  .qr-wrap svg { display: block; width: 220px; height: 220px; }
+  .status { display: inline-flex; align-items: center; gap: 8px; font-family: Archivo, sans-serif; font-weight: 800; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; padding: 8px 16px; border-radius: 999px; margin-bottom: 22px; }
+  .status.valid { background: rgba(74,222,128,.15); color: #4ADE80; }
+  .status.used { background: rgba(255,92,92,.15); color: #FF5C5C; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; display: block; }
+  .details { text-align: left; display: flex; flex-direction: column; gap: 14px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 20px; }
+  .row { display: flex; flex-direction: column; gap: 2px; }
+  .row span:first-child { font-family: Archivo, sans-serif; font-weight: 700; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #F0113A; }
+  .row span:last-child { font-size: 15px; color: #F2F2F4; }
+  .error { color: #A5A5B0; font-size: 15px; }
+  .code { font-family: monospace; font-size: 12px; color: #6D6D77; margin-top: 20px; word-break: break-all; }
+</style>
+</head>
+<body>
+<main class="card" id="app">
+  <span class="eyebrow">Rememberos Hasta la Médula</span>
+  <p class="sub">Cargando tu entrada…</p>
+</main>
+
+<script>
+(function () {
+  var cfg = window.SUPABASE_CONFIG;
+  var app = document.getElementById('app');
+  var code = new URLSearchParams(window.location.search).get('code');
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function renderError(message) {
+    app.innerHTML = '<span class="eyebrow">Rememberos Hasta la Médula</span><h1>Entrada no encontrada</h1><p class="error">' + escapeHtml(message) + '</p>';
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '';
+    var MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    var DAYS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    var parts = iso.split('-').map(Number);
+    var dt = new Date(parts[0], parts[1] - 1, parts[2]);
+    var day = DAYS[dt.getDay()];
+    return day.charAt(0).toUpperCase() + day.slice(1) + ' ' + parts[2] + ' de ' + MONTHS[parts[1] - 1];
+  }
+
+  function renderTicket(t) {
+    var venue = [t.venue_name, t.venue_location].filter(Boolean).join(' · ');
+    var usedAt = t.redeemed_at ? new Date(t.redeemed_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : null;
+    app.innerHTML =
+      '<span class="eyebrow">' + escapeHtml(t.tramo_label || 'Entrada') + '</span>' +
+      '<h1>' + escapeHtml(t.event_title) + '</h1>' +
+      '<p class="sub">' + escapeHtml(t.buyer_name || '') + '</p>' +
+      '<div class="qr-wrap"><div id="qr-canvas"></div></div>' +
+      (t.redeemed_at
+        ? '<span class="status used"><span class="status-dot"></span>Ya usada' + (usedAt ? ' a las ' + usedAt : '') + '</span>'
+        : '<span class="status valid"><span class="status-dot"></span>Válida</span>') +
+      '<div class="details">' +
+      '<div class="row"><span>Fecha</span><span>' + escapeHtml(formatDate(t.event_date)) + '</span></div>' +
+      '<div class="row"><span>Lugar</span><span>' + escapeHtml(venue) + '</span></div>' +
+      '<div class="row"><span>Horario</span><span>' + escapeHtml(t.time_range) + '</span></div>' +
+      '</div>' +
+      '<div class="code">' + escapeHtml(t.code) + '</div>';
+    if (window.qrcode) {
+      var qr = window.qrcode(0, 'M');
+      qr.addData(t.code);
+      qr.make();
+      document.getElementById('qr-canvas').innerHTML = qr.createSvgTag({ scalable: true, margin: 2 });
+    }
+  }
+
+  async function load() {
+    if (!code) { renderError('Falta el código de la entrada en el enlace.'); return; }
+    if (!cfg || !cfg.url || cfg.url.indexOf('REPLACE_WITH') === 0 || typeof window.supabase === 'undefined') {
+      renderError('La tienda de entradas no está disponible ahora mismo.');
+      return;
+    }
+    try {
+      var sb = window.supabase.createClient(cfg.url, cfg.anonKey);
+      var res = await sb.rpc('get_ticket_by_code', { p_code: code });
+      if (res.error || !res.data || !res.data.length) { renderError('No encontramos ninguna entrada con ese código.'); return; }
+      renderTicket(res.data[0]);
+    } catch (e) {
+      renderError('No se pudo cargar la entrada. Inténtalo de nuevo en unos segundos.');
+    }
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

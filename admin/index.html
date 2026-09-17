@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="../supabase-config.js"></script>
 <style>
   :root { color-scheme: dark; }
@@ -54,6 +55,13 @@
   .checkbox input { width: auto; }
   #hero-preview img { max-width: 100%; border-radius: 10px; margin: 10px 0; display: block; }
   .logo-video { display: block; width: 64px; height: 64px; border-radius: 50%; object-fit: cover; margin: 0 auto 18px; background: #08080A; box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 0 24px rgba(240,17,58,.35); }
+  .dash-nav { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  #scan-video { width: 100%; border-radius: 14px; margin-top: 14px; background: #000; display: block; }
+  .scan-result { margin-top: 14px; padding: 22px 16px; border-radius: 14px; font-family: Archivo, sans-serif; font-weight: 900; font-size: 20px; text-align: center; text-transform: uppercase; transition: background .15s, color .15s; }
+  .scan-result.idle { background: rgba(255,255,255,.06); color: #A5A5B0; font-weight: 600; font-size: 14px; text-transform: none; }
+  .scan-result.checking { background: rgba(255,255,255,.1); color: #F2F2F4; font-weight: 700; font-size: 15px; text-transform: none; }
+  .scan-result.ok { background: #16A34A; color: #fff; }
+  .scan-result.bad { background: #DC2626; color: #fff; }
 </style>
 </head>
 <body>
@@ -80,7 +88,28 @@
   var recoveryMode = false;
   var tramos = [];
   var artistsList = [];
+  var currentView = 'events';
+  var stopScanner = null;
   var $app = document.getElementById('app');
+
+  function goTo(view) {
+    if (stopScanner) { stopScanner(); stopScanner = null; }
+    currentView = view;
+    renderRoot();
+  }
+
+  function renderDashboardNav(active) {
+    var nav = el(
+      '<div class="dash-nav">' +
+      '<button type="button" class="' + (active === 'events' ? '' : 'secondary') + '" data-nav="events">Eventos</button>' +
+      '<button type="button" class="' + (active === 'scanner' ? '' : 'secondary') + '" data-nav="scanner">Escanear entradas</button>' +
+      '</div>'
+    );
+    nav.querySelectorAll('[data-nav]').forEach(function (btn) {
+      btn.addEventListener('click', function () { goTo(btn.getAttribute('data-nav')); });
+    });
+    return nav;
+  }
 
   function el(html) {
     var t = document.createElement('template');
@@ -131,6 +160,7 @@
     if (recoveryMode) return renderSetNewPassword();
     if (!session) return renderLogin('login');
     if (session.user && session.user.user_metadata && session.user.user_metadata.must_change_password) return renderForceChangePassword();
+    if (currentView === 'scanner') return renderScanner();
     renderEventsList();
   }
 
@@ -257,6 +287,7 @@
     if (res.error) { $app.innerHTML = '<p class="error">Error cargando eventos: ' + res.error.message + '</p>'; return; }
     var events = res.data || [];
     $app.innerHTML = '';
+    $app.appendChild(renderDashboardNav('events'));
     var wrap = el('<div class="card"><h2>Eventos</h2><div id="events-rows"></div></div>');
     $app.appendChild(wrap);
     var rows = wrap.querySelector('#events-rows');
@@ -295,6 +326,103 @@
     }).select().single();
     if (res.error) return alert('No se pudo crear el evento: ' + res.error.message);
     openEvent(res.data.id);
+  }
+
+  function renderScanner() {
+    $app.innerHTML = '';
+    $app.appendChild(renderDashboardNav('scanner'));
+    var wrap = el(
+      '<div class="card">' +
+      '<h2>Escanear entradas</h2>' +
+      '<p class="muted">Apunta la cámara al código QR de la entrada. Se valida al instante.</p>' +
+      '<video id="scan-video" playsinline muted autoplay></video>' +
+      '<div id="scan-result" class="scan-result idle">Pidiendo acceso a la cámara…</div>' +
+      '</div>'
+    );
+    $app.appendChild(wrap);
+
+    var video = wrap.querySelector('#scan-video');
+    var resultEl = wrap.querySelector('#scan-result');
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d', { willReadFrequently: true });
+    var stream = null;
+    var stopped = false;
+    var rafId = null;
+    var cooldownUntil = 0;
+
+    function setResult(text, kind) {
+      resultEl.textContent = text;
+      resultEl.className = 'scan-result ' + kind;
+    }
+
+    async function handleCode(code) {
+      cooldownUntil = Date.now() + 2500;
+      setResult('Comprobando…', 'checking');
+      var lookupRes = await sb.from('tickets')
+        .select('code, redeemed_at, orders(buyer_name, events(title), ticket_tramos(label))')
+        .eq('code', code)
+        .maybeSingle();
+      if (stopped) return;
+      if (lookupRes.error || !lookupRes.data) {
+        setResult('❌ Entrada no válida', 'bad');
+        return;
+      }
+      if (lookupRes.data.redeemed_at) {
+        var usedAt = new Date(lookupRes.data.redeemed_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        setResult('⚠️ Ya se ha usado a las ' + usedAt, 'bad');
+        return;
+      }
+      var redeemRes = await sb.from('tickets')
+        .update({ redeemed_at: new Date().toISOString(), redeemed_by: session.user.id })
+        .eq('code', code)
+        .is('redeemed_at', null)
+        .select();
+      if (stopped) return;
+      if (redeemRes.error || !redeemRes.data || !redeemRes.data.length) {
+        setResult('⚠️ Ya se ha usado (justo ahora)', 'bad');
+        return;
+      }
+      var order = lookupRes.data.orders;
+      var name = order ? order.buyer_name : '';
+      setResult('✅ Entrada válida' + (name ? ' — ' + name : ''), 'ok');
+    }
+
+    function tick() {
+      if (stopped) return;
+      if (video.readyState === video.HAVE_ENOUGH_DATA && window.jsQR) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var found = window.jsQR(img.data, img.width, img.height);
+        if (found && found.data && Date.now() > cooldownUntil) {
+          handleCode(found.data);
+        }
+      }
+      rafId = requestAnimationFrame(tick);
+    }
+
+    async function start() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      } catch (e) {
+        setResult('No se pudo acceder a la cámara: ' + e.message, 'bad');
+        return;
+      }
+      if (stopped) { stream.getTracks().forEach(function (tr) { tr.stop(); }); return; }
+      video.srcObject = stream;
+      await video.play();
+      setResult('Apunta al código QR de la entrada.', 'idle');
+      tick();
+    }
+
+    stopScanner = function () {
+      stopped = true;
+      if (rafId) cancelAnimationFrame(rafId);
+      if (stream) stream.getTracks().forEach(function (tr) { tr.stop(); });
+    };
+
+    start();
   }
 
   async function openEvent(id) {
@@ -535,6 +663,8 @@
   }
 
   document.getElementById('logout-btn').addEventListener('click', async function () {
+    if (stopScanner) { stopScanner(); stopScanner = null; }
+    currentView = 'events';
     await sb.auth.signOut();
   });
 
