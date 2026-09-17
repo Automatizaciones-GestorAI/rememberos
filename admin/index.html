@@ -65,6 +65,12 @@
   .scan-result.checking { background: rgba(255,255,255,.1); color: #F2F2F4; font-weight: 700; font-size: 15px; text-transform: none; }
   .scan-result.ok { background: #16A34A; color: #fff; }
   .scan-result.bad { background: #DC2626; color: #fff; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat { background: #08080A; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .stat-label { font-family: Archivo, sans-serif; font-weight: 800; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #F0113A; }
+  .stat-value { font-family: Archivo, sans-serif; font-weight: 800; font-size: 22px; color: #F2F2F4; }
+  .sales-tramo-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid rgba(255,255,255,.08); font-size: 13px; }
+  .sales-tramo-row:first-child { border-top: none; }
 </style>
 </head>
 <body>
@@ -543,8 +549,66 @@
       renderEventsList();
     });
 
+    renderSalesSummary(ev.id);
     renderTramosSection(ev.id);
     renderArtistsSection(ev.id);
+  }
+
+  function formatEuros(cents) {
+    return ((cents || 0) / 100).toFixed(2).replace('.', ',') + ' €';
+  }
+
+  async function loadSalesSummary(eventId) {
+    var ordersRes = await sb.from('orders').select('id, tramo_id, quantity, amount_cents').eq('event_id', eventId).eq('status', 'paid');
+    if (ordersRes.error) throw ordersRes.error;
+    var orders = ordersRes.data || [];
+    var orderIds = orders.map(function (o) { return o.id; });
+    var ticketsRes = orderIds.length ? await sb.from('tickets').select('redeemed_at').in('order_id', orderIds) : { data: [] };
+    if (ticketsRes.error) throw ticketsRes.error;
+    var tickets = ticketsRes.data || [];
+    var byTramo = {};
+    orders.forEach(function (o) {
+      var key = o.tramo_id || 'sin-tramo';
+      if (!byTramo[key]) byTramo[key] = { quantity: 0, revenueCents: 0 };
+      byTramo[key].quantity += (o.quantity || 0);
+      byTramo[key].revenueCents += (o.amount_cents || 0);
+    });
+    return {
+      totalRevenueCents: orders.reduce(function (sum, o) { return sum + (o.amount_cents || 0); }, 0),
+      totalSold: orders.reduce(function (sum, o) { return sum + (o.quantity || 0); }, 0),
+      totalTickets: tickets.length,
+      totalRedeemed: tickets.filter(function (t) { return t.redeemed_at; }).length,
+      byTramo: byTramo
+    };
+  }
+
+  function renderSalesSummary(eventId) {
+    var section = el(
+      '<div class="card">' +
+      '<h2>Ventas</h2>' +
+      '<p class="muted" id="sales-loading">Cargando resumen de ventas…</p>' +
+      '<div id="sales-content" style="display:none"></div>' +
+      '</div>'
+    );
+    $app.appendChild(section);
+    loadSalesSummary(eventId).then(function (summary) {
+      section.querySelector('#sales-loading').style.display = 'none';
+      var content = section.querySelector('#sales-content');
+      content.style.display = '';
+      var tramoRows = tramos.map(function (t) {
+        var s = summary.byTramo[t.id] || { quantity: 0, revenueCents: 0 };
+        return '<div class="sales-tramo-row"><span>' + escapeHtml(t.label) + '</span><span class="muted">' + s.quantity + (s.quantity === 1 ? ' entrada · ' : ' entradas · ') + formatEuros(s.revenueCents) + '</span></div>';
+      }).join('');
+      content.innerHTML =
+        '<div class="stats-grid">' +
+        '<div class="stat"><span class="stat-label">Ingresos</span><span class="stat-value">' + formatEuros(summary.totalRevenueCents) + '</span></div>' +
+        '<div class="stat"><span class="stat-label">Entradas vendidas</span><span class="stat-value">' + summary.totalSold + '</span></div>' +
+        '<div class="stat"><span class="stat-label">Validadas en puerta</span><span class="stat-value">' + summary.totalRedeemed + ' / ' + summary.totalTickets + '</span></div>' +
+        '</div>' +
+        (tramoRows || '<p class="muted">Todavía no hay tramos guardados.</p>');
+    }).catch(function (err) {
+      section.querySelector('#sales-loading').textContent = friendlyError(err);
+    });
   }
 
   function renderTramosSection(eventId) {
