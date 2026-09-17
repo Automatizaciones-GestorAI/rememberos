@@ -1,8 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rememberos Hasta la Médula · Eventos y entradas en Seseña (Toledo)</title>
+<meta name="description" content="Tardeos y fiestas de Rememberos Hasta la Médula en Seseña (Toledo). Consulta la fecha, el line-up y compra tu entrada online o por WhatsApp.">
+<link rel="canonical" href="https://rememberos-web.r9lvic.easypanel.host/">
+<link rel="icon" href="logo.png" type="image/png">
+<link rel="apple-touch-icon" href="logo.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rememberos Hasta la Médula">
+<meta property="og:title" content="Rememberos Hasta la Médula · Eventos y entradas en Seseña (Toledo)">
+<meta property="og:description" content="Tardeos y fiestas de Rememberos Hasta la Médula en Seseña (Toledo). Consulta la fecha, el line-up y compra tu entrada online o por WhatsApp.">
+<meta property="og:image" content="https://rememberos-web.r9lvic.easypanel.host/logo.png">
+<meta property="og:url" content="https://rememberos-web.r9lvic.easypanel.host/">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rememberos Hasta la Médula · Eventos y entradas en Seseña (Toledo)">
+<meta name="twitter:description" content="Tardeos y fiestas de Rememberos Hasta la Médula en Seseña (Toledo). Consulta la fecha, el line-up y compra tu entrada online o por WhatsApp.">
+<meta name="twitter:image" content="https://rememberos-web.r9lvic.easypanel.host/logo.png">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -384,6 +400,7 @@ function transformEvent(ev, sb) {
     title: title,
     subtitle: ev.subtitle || '',
     dateLabel: formatEventDateEs(ev.event_date),
+    eventDateIso: ev.event_date || '',
     timeRange: ev.time_range || '',
     venueName: venueName,
     venueLocation: venueLocation,
@@ -405,6 +422,7 @@ function transformTramo(t, event) {
   return {
     label: label,
     status: t.status || 'proximamente',
+    price: t.price == null ? null : t.price,
     priceLabel: t.price == null ? 'Precio por anunciar' : formatPrice(t.price) + ' €',
     description: t.description || '',
     ctaText: t.cta_text || 'Comprar ahora',
@@ -445,6 +463,7 @@ const FALLBACK_EVENT = {
   title: 'Tardeo Remember',
   subtitle: 'Old School · Remember Session',
   dateLabel: 'Sábado 14 de noviembre',
+  eventDateIso: '',
   timeRange: '17:00h — 00:00h',
   venueName: 'Coyote Club',
   venueLocation: 'Seseña (Toledo)',
@@ -461,10 +480,10 @@ const FALLBACK_EVENT = {
 };
 
 const FALLBACK_TRAMOS = [
-  { label: 'Tramo 1', status: 'disponible', priceLabel: '10 €', description: 'Entrada anticipada. Acceso de 17:00h a 00:00h.', ctaText: 'Comprar ahora', whatsappHref: waHref('34640129711', 'Quiero entradas del Tramo 1 para Tardeo Remember') },
-  { label: 'Tramo 2', status: 'disponible', priceLabel: '13 €', description: 'Entrada + consumición incluida. Acceso de 17:00h a 00:00h.', ctaText: 'Comprar ahora', whatsappHref: waHref('34640129711', 'Quiero entradas del Tramo 2 para Tardeo Remember') },
-  { label: 'Tramo 3', status: 'proximamente', priceLabel: 'Precio por anunciar', description: 'Se abrirá cuando el Tramo 2 se agote. Avisamos en Instagram.', ctaText: 'Muy pronto', whatsappHref: '#' },
-  { label: 'Tramo 4', status: 'secreto', priceLabel: '', description: 'Un nombre que no esperas. Se anuncia días antes del evento.', ctaText: 'Secreto', whatsappHref: '#' }
+  { label: 'Tramo 1', status: 'disponible', price: 10, priceLabel: '10 €', description: 'Entrada anticipada. Acceso de 17:00h a 00:00h.', ctaText: 'Comprar ahora', whatsappHref: waHref('34640129711', 'Quiero entradas del Tramo 1 para Tardeo Remember') },
+  { label: 'Tramo 2', status: 'disponible', price: 13, priceLabel: '13 €', description: 'Entrada + consumición incluida. Acceso de 17:00h a 00:00h.', ctaText: 'Comprar ahora', whatsappHref: waHref('34640129711', 'Quiero entradas del Tramo 2 para Tardeo Remember') },
+  { label: 'Tramo 3', status: 'proximamente', price: null, priceLabel: 'Precio por anunciar', description: 'Se abrirá cuando el Tramo 2 se agote. Avisamos en Instagram.', ctaText: 'Muy pronto', whatsappHref: '#' },
+  { label: 'Tramo 4', status: 'secreto', price: null, priceLabel: '', description: 'Un nombre que no esperas. Se anuncia días antes del evento.', ctaText: 'Secreto', whatsappHref: '#' }
 ];
 
 const FALLBACK_ARTISTS = [
@@ -528,6 +547,7 @@ class Component extends DCLogic {
     };
     window.addEventListener('resize', this.onResize);
     this.applyTicker();
+    this.updateStructuredData();
     this.loadFromSupabase();
   }
 
@@ -569,6 +589,9 @@ class Component extends DCLogic {
 
   componentDidUpdate(prevProps, prevState) {
     this.applyTicker();
+    if (!prevState || prevState.event !== this.state.event || prevState.tramos !== this.state.tramos) {
+      this.updateStructuredData();
+    }
     if (prevState && prevState.menuOpen !== this.state.menuOpen) {
       if (this.state.menuOpen && window.innerWidth < 900) this.lockScroll(); else this.unlockScroll();
     }
@@ -608,6 +631,50 @@ class Component extends DCLogic {
   applyTicker() {
     const t = this.tickerRef.current;
     if (t) t.style.animationDuration = (this.state.event.tickerSeconds ?? this.props.tickerSeconds ?? 34) + 's';
+  }
+
+  updateStructuredData() {
+    const ev = this.state.event;
+    if (!ev || !ev.title) return;
+    const AVAILABILITY = { disponible: 'https://schema.org/InStock', agotado: 'https://schema.org/SoldOut' };
+    const offers = (this.state.tramos || [])
+      .filter((t) => t.price != null)
+      .map((t) => ({
+        '@type': 'Offer',
+        name: t.label,
+        price: t.price,
+        priceCurrency: 'EUR',
+        availability: AVAILABILITY[t.status] || 'https://schema.org/PreOrder',
+        url: t.whatsappHref
+      }));
+    const data = {
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: ev.title,
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      eventStatus: 'https://schema.org/EventScheduled',
+      location: {
+        '@type': 'Place',
+        name: ev.venueName || 'Rememberos Hasta la Médula',
+        address: ev.venueLocation || 'Seseña, Toledo, España'
+      },
+      organizer: { '@type': 'Organization', name: 'Rememberos Hasta la Médula' }
+    };
+    if (ev.eventDateIso) data.startDate = ev.eventDateIso;
+    if (ev.subtitle) data.description = ev.subtitle;
+    if (ev.heroImageUrl) {
+      try { data.image = [new URL(ev.heroImageUrl, window.location.origin).href]; } catch (e) {}
+    }
+    if (offers.length) data.offers = offers;
+
+    let script = document.getElementById('event-jsonld');
+    if (!script) {
+      script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.id = 'event-jsonld';
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(data);
   }
 
   renderVals() {
