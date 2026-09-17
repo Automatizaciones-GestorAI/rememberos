@@ -51,8 +51,10 @@
   .row-edit:first-child { border-top: none; }
   .row-edit select, .row-edit textarea, .row-edit .checkbox { grid-column: 1 / -1; }
   .row-edit .w-cta { grid-column: 1 / -1; }
+  .row-edit button[data-remove] { grid-column: 1 / -1; justify-self: start; margin-top: 4px; }
   .checkbox { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #A5A5B0; }
   .checkbox input { width: auto; }
+  .w-orden[readonly] { opacity: .55; cursor: default; }
   #hero-preview img { max-width: 100%; border-radius: 10px; margin: 10px 0; display: block; }
   .logo-video { display: block; width: 64px; height: 64px; border-radius: 50%; object-fit: cover; margin: 0 auto 18px; background: #08080A; box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 0 24px rgba(240,17,58,.35); }
   .dash-nav { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -463,7 +465,6 @@
       '<label>Foto de portada<input type="file" id="hero-file" accept="image/*">' +
       '<input type="hidden" name="hero_image_url" value="' + attr(ev.hero_image_url) + '"></label>' +
       '<div id="hero-preview">' + (ev.hero_image_url ? '<img src="' + attr(publicUrlFor(ev.hero_image_url)) + '" alt="">' : '') + '</div>' +
-      '<label>Velocidad de la cinta roja (segundos)<input name="ticker_seconds" type="number" min="12" max="70" value="' + (ev.ticker_seconds == null ? 34 : ev.ticker_seconds) + '"></label>' +
       '<h3>Reservados</h3>' +
       '<label>Título<input name="reserved_title" value="' + attr(ev.reserved_title) + '" placeholder="5 personas + botella + 8 refrescos"></label>' +
       '<label>Precio (€)<input name="reserved_price" type="number" step="0.01" value="' + (ev.reserved_price == null ? '' : ev.reserved_price) + '"></label>' +
@@ -505,7 +506,6 @@
         whatsapp_number: fd.get('whatsapp_number') || null,
         status: fd.get('status'),
         hero_image_url: fd.get('hero_image_url') || null,
-        ticker_seconds: Number(fd.get('ticker_seconds')) || 34,
         reserved_title: fd.get('reserved_title') || null,
         reserved_price: fd.get('reserved_price') ? Number(fd.get('reserved_price')) : null,
         reserved_description: fd.get('reserved_description') || null
@@ -546,7 +546,7 @@
         }).join('');
         var row = el(
           '<div class="row-edit">' +
-          '<input type="number" class="w-orden" value="' + t.position + '" title="Orden" data-field="position">' +
+          '<input type="number" class="w-orden" value="' + (i + 1) + '" title="Orden (automático)" readonly tabindex="-1">' +
           '<input class="w-label" value="' + attr(t.label) + '" placeholder="Tramo 1" data-field="label">' +
           '<input class="w-price" type="number" step="0.01" value="' + (t.price == null ? '' : t.price) + '" placeholder="Precio (vacío = sin anunciar)" data-field="price">' +
           '<select data-field="status">' + options + '</select>' +
@@ -559,7 +559,6 @@
           input.addEventListener('input', function () {
             var field = input.dataset.field;
             var val = input.value;
-            if (field === 'position') val = Number(val) || 0;
             if (field === 'price') val = val === '' ? null : Number(val);
             tramos[i][field] = val;
           });
@@ -590,7 +589,7 @@
     section.appendChild(saveBtn);
     section.appendChild(msg);
     saveBtn.addEventListener('click', async function () {
-      var upserts = tramos.map(function (t) { return Object.assign({}, t, { event_id: eventId }); });
+      var upserts = tramos.map(function (t, i) { return Object.assign({}, t, { event_id: eventId, position: i + 1 }); });
       var res = await sb.from('ticket_tramos').upsert(upserts).select();
       if (res.error) { msg.textContent = 'Error: ' + res.error.message; msg.className = 'error'; return; }
       tramos = res.data.sort(function (a, b) { return a.position - b.position; });
@@ -610,7 +609,7 @@
       artistsList.forEach(function (a, i) {
         var row = el(
           '<div class="row-edit">' +
-          '<input type="number" class="w-orden" value="' + a.position + '" title="Orden" data-field="position">' +
+          '<input type="number" class="w-orden" value="' + (i + 1) + '" title="Orden (automático)" readonly tabindex="-1">' +
           '<input class="w-label" value="' + attr(a.name) + '" placeholder="Nombre del artista" data-field="name">' +
           '<input class="w-price" value="' + attr(a.genre_tag) + '" placeholder="Old School" data-field="genre_tag">' +
           '<input class="w-cta" value="' + attr(a.badge) + '" placeholder="Cabeza de cartel (opcional)" data-field="badge">' +
@@ -622,7 +621,6 @@
           input.addEventListener('input', function () {
             var field = input.dataset.field;
             var val = input.type === 'checkbox' ? input.checked : input.value;
-            if (field === 'position') val = Number(val) || 0;
             artistsList[i][field] = val;
           });
         });
@@ -652,7 +650,7 @@
     section.appendChild(saveBtn);
     section.appendChild(msg);
     saveBtn.addEventListener('click', async function () {
-      var upserts = artistsList.map(function (a) { return Object.assign({}, a, { event_id: eventId }); });
+      var upserts = artistsList.map(function (a, i) { return Object.assign({}, a, { event_id: eventId, position: i + 1 }); });
       var res = await sb.from('artists').upsert(upserts).select();
       if (res.error) { msg.textContent = 'Error: ' + res.error.message; msg.className = 'error'; return; }
       artistsList = res.data.sort(function (a, b) { return a.position - b.position; });
