@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /ticket.html
+
+Sitemap: https://rememberos-web.r9lvic.easypanel.host/sitemap.xml
