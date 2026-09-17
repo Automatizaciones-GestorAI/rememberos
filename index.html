@@ -250,6 +250,29 @@
                 <h3 style="margin:0;font-family:Archivo,sans-serif;font-weight:900;font-size:clamp(24px,3.4vw,36px);line-height:1;letter-spacing:-.02em;text-transform:uppercase;color:#F7F7F9">{{ upcoming.title }}</h3>
                 <span style="font-size:13px;color:#A5A5B0">{{ upcoming.venueLabel }}</span>
               </div>
+              <sc-if value="{{ upcoming.hasDetails }}">
+                <button type="button" onClick="{{ upcoming.toggle }}" style="position:relative;align-self:flex-start;background:none;border:none;padding:0;font-family:Archivo,sans-serif;font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#F0113A;cursor:pointer">{{ upcoming.toggleLabel }} →</button>
+                <sc-if value="{{ upcoming.expanded }}">
+                  <div style="position:relative;display:flex;flex-direction:column;gap:12px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1)">
+                    <sc-if value="{{ upcoming.timeRange }}">
+                      <div style="display:flex;flex-direction:column;gap:2px">
+                        <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#F0113A">Horario</span>
+                        <span style="font-size:13px;color:#F2F2F4">{{ upcoming.timeRange }}</span>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ upcoming.artists.length }}">
+                      <div style="display:flex;flex-direction:column;gap:6px">
+                        <span style="font-family:Archivo,sans-serif;font-weight:800;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#F0113A">Artistas confirmados</span>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px">
+                          <sc-for list="{{ upcoming.artists }}" as="upcomingArtist">
+                            <span style="padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px;color:#F2F2F4">{{ upcomingArtist.name }}</span>
+                          </sc-for>
+                        </div>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+              </sc-if>
             </article>
           </sc-for>
         </div>
@@ -402,12 +425,19 @@ function transformArtist(a, i) {
   };
 }
 
-function transformUpcoming(ev, sb) {
+function transformUpcoming(ev, sb, artists) {
+  const confirmedArtists = (artists || [])
+    .filter((a) => a.confirmed !== false)
+    .map((a) => ({ name: a.name || '' }));
   return {
+    id: ev.id,
     title: ev.title || '',
     dateLabel: formatEventDateEs(ev.event_date),
+    timeRange: ev.time_range || '',
     venueLabel: [ev.venue_name, ev.venue_location].filter(Boolean).join(' · '),
-    heroImageUrl: heroUrlFor(sb, ev.hero_image_url)
+    heroImageUrl: heroUrlFor(sb, ev.hero_image_url),
+    artists: confirmedArtists,
+    hasDetails: Boolean(ev.time_range) || confirmedArtists.length > 0
   };
 }
 
@@ -453,7 +483,8 @@ class Component extends DCLogic {
     event: FALLBACK_EVENT,
     tramos: FALLBACK_TRAMOS,
     artists: FALLBACK_ARTISTS,
-    upcomingEvents: FALLBACK_UPCOMING
+    upcomingEvents: FALLBACK_UPCOMING,
+    expandedUpcoming: null
   };
 
   constructor(p) {
@@ -516,7 +547,20 @@ class Component extends DCLogic {
       const nextState = { event: transformEvent(activeEvent, sb) };
       if (!tramosRes.error) nextState.tramos = (tramosRes.data || []).map((t) => transformTramo(t, activeEvent));
       if (!artistsRes.error) nextState.artists = (artistsRes.data || []).map(transformArtist);
-      if (!upcomingRes.error) nextState.upcomingEvents = (upcomingRes.data || []).map((ev) => transformUpcoming(ev, sb));
+      if (!upcomingRes.error) {
+        const upcomingEvents = upcomingRes.data || [];
+        const upcomingIds = upcomingEvents.map((ev) => ev.id);
+        let artistsByEvent = {};
+        if (upcomingIds.length) {
+          const upArtistsRes = await sb.from('artists').select('*').in('event_id', upcomingIds).order('position');
+          if (!upArtistsRes.error) {
+            (upArtistsRes.data || []).forEach((a) => {
+              (artistsByEvent[a.event_id] = artistsByEvent[a.event_id] || []).push(a);
+            });
+          }
+        }
+        nextState.upcomingEvents = upcomingEvents.map((ev) => transformUpcoming(ev, sb, artistsByEvent[ev.id]));
+      }
       this.setState(nextState);
     } catch (e) {
       console.warn('No se pudieron cargar los datos de Supabase, se mantiene el contenido estático.', e);
@@ -580,7 +624,14 @@ class Component extends DCLogic {
       event: this.state.event,
       tramos: this.state.tramos,
       artists: this.state.artists,
-      upcomingEvents: this.state.upcomingEvents
+      upcomingEvents: this.state.upcomingEvents.map((u) => {
+        const expanded = this.state.expandedUpcoming === u.id;
+        return Object.assign({}, u, {
+          expanded: expanded,
+          toggleLabel: expanded ? 'Ocultar detalles' : 'Ver detalles',
+          toggle: () => this.setState((s) => ({ expandedUpcoming: s.expandedUpcoming === u.id ? null : u.id }))
+        });
+      })
     };
   }
 }
