@@ -45,6 +45,7 @@
   .row-main { display: flex; flex-direction: column; }
   .badge { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,.1); white-space: nowrap; }
   .badge-active { background: #F0113A; color: #fff; }
+  .badge-upcoming { background: rgba(240,17,58,.16); color: #FF7A8C; }
   .badge-draft { background: rgba(255,255,255,.14); color: #A5A5B0; }
   .badge-past { background: rgba(255,255,255,.06); color: #6D6D77; }
   .row-edit { display: grid; grid-template-columns: 70px 1fr 1fr; gap: 8px; padding: 12px 0; border-top: 1px solid rgba(255,255,255,.08); align-items: start; }
@@ -83,7 +84,7 @@
 
   var sb = window.supabase.createClient(cfg.url, cfg.anonKey);
 
-  var STATUS_LABELS = { draft: 'Borrador', active: 'Activo (portada)', past: 'Pasado' };
+  var STATUS_LABELS = { draft: 'Borrador', active: 'Activo (portada)', upcoming: 'Próximo evento', past: 'Pasado' };
   var TRAMO_STATUS_LABELS = { disponible: 'Disponible', agotado: 'Agotado', proximamente: 'Próximamente', secreto: 'Secreto/sorpresa' };
 
   var session = null;
@@ -124,6 +125,19 @@
     });
   }
   function attr(s) { return escapeHtml(s); }
+  function friendlyError(error) {
+    var msg = (error && error.message) || '';
+    console.error('Admin error:', error);
+    if (/one_active_event/.test(msg)) return 'Ya hay otro evento marcado como "Activo". Cambia ese otro evento a "Próximo evento" o "Pasado" antes de activar este (solo puede haber uno activo a la vez).';
+    if (/events_slug_key/.test(msg)) return 'Ya existe un evento guardado con ese mismo nombre. Cambia el título e inténtalo de nuevo.';
+    if (/invalid login credentials/i.test(msg)) return 'El email o la contraseña no son correctos.';
+    if (/email not confirmed/i.test(msg)) return 'Este email todavía no está confirmado.';
+    if (/only request this|rate limit|too many requests/i.test(msg)) return 'Has hecho varios intentos seguidos. Espera un minuto y vuelve a intentarlo.';
+    if (/password should be at least|password.*weak|weak.*password/i.test(msg)) return 'La contraseña es demasiado corta o débil (mínimo 6 caracteres).';
+    if (/new row violates row-level security|permission denied/i.test(msg)) return 'No tienes permiso para hacer esto. Si crees que es un error, contacta con nosotros.';
+    if (/failed to fetch|network|load failed/i.test(msg)) return 'No se pudo conectar. Revisa tu conexión a internet e inténtalo de nuevo.';
+    return 'Ha ocurrido un problema inesperado. Inténtalo de nuevo y, si sigue pasando, contacta con nosotros.';
+  }
   var LOGO_VIDEO_HTML = '<video class="logo-video" data-logo-video autoplay muted loop playsinline poster="../logo.png" src="../uploads/rememberos-todo.mp4"></video>';
   function playLogoVideo(video) {
     if (!video) return;
@@ -191,7 +205,7 @@
         msg.className = '';
         msg.textContent = 'Enviando…';
         var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
-        if (res.error) { msg.textContent = 'Error: ' + res.error.message; msg.className = 'error'; return; }
+        if (res.error) { msg.textContent = friendlyError(res.error); msg.className = 'error'; return; }
         msg.textContent = 'Revisa tu email: te hemos enviado un enlace para elegir una contraseña nueva.';
         msg.className = 'ok';
       });
@@ -219,7 +233,7 @@
       var errorEl = form.querySelector('#login-error');
       errorEl.textContent = '';
       var res = await sb.auth.signInWithPassword({ email: email, password: password });
-      if (res.error) errorEl.textContent = 'No se pudo entrar: ' + res.error.message;
+      if (res.error) errorEl.textContent = friendlyError(res.error);
     });
   }
 
@@ -246,7 +260,7 @@
       if (p1 !== p2) { msg.textContent = 'Las contraseñas no coinciden.'; return; }
       msg.textContent = '';
       var res = await sb.auth.updateUser({ password: p1, data: { must_change_password: false } });
-      if (res.error) { msg.textContent = 'Error: ' + res.error.message; return; }
+      if (res.error) { msg.textContent = friendlyError(res.error); return; }
       var s = await sb.auth.getSession();
       session = s.data.session;
       renderRoot();
@@ -275,7 +289,7 @@
       if (p1 !== p2) { msg.textContent = 'Las contraseñas no coinciden.'; return; }
       msg.textContent = '';
       var res = await sb.auth.updateUser({ password: p1, data: { must_change_password: false } });
-      if (res.error) { msg.textContent = 'Error: ' + res.error.message; return; }
+      if (res.error) { msg.textContent = friendlyError(res.error); return; }
       recoveryMode = false;
       var s = await sb.auth.getSession();
       session = s.data.session;
@@ -286,7 +300,7 @@
   async function renderEventsList() {
     $app.innerHTML = '<p class="muted">Cargando eventos…</p>';
     var res = await sb.from('events').select('*').order('event_date', { ascending: false });
-    if (res.error) { $app.innerHTML = '<p class="error">Error cargando eventos: ' + res.error.message + '</p>'; return; }
+    if (res.error) { $app.innerHTML = '<p class="error">No se pudieron cargar los eventos. ' + escapeHtml(friendlyError(res.error)) + '</p>'; return; }
     var events = res.data || [];
     $app.innerHTML = '';
     $app.appendChild(renderDashboardNav('events'));
@@ -309,7 +323,7 @@
         e.stopPropagation();
         if (!confirm('¿Eliminar "' + ev.title + '" y todos sus tramos/artistas? Esto no se puede deshacer.')) return;
         var delRes = await sb.from('events').delete().eq('id', ev.id);
-        if (delRes.error) return alert('Error: ' + delRes.error.message);
+        if (delRes.error) return alert(friendlyError(delRes.error));
         renderEventsList();
       });
       rows.appendChild(row);
@@ -326,7 +340,7 @@
       event_date: new Date().toISOString().slice(0, 10),
       status: 'draft'
     }).select().single();
-    if (res.error) return alert('No se pudo crear el evento: ' + res.error.message);
+    if (res.error) return alert('No se pudo crear el evento. ' + friendlyError(res.error));
     openEvent(res.data.id);
   }
 
@@ -435,7 +449,7 @@
       sb.from('artists').select('*').eq('event_id', id).order('position')
     ]);
     var evRes = results[0], trRes = results[1], arRes = results[2];
-    if (evRes.error) { $app.innerHTML = '<p class="error">' + evRes.error.message + '</p>'; return; }
+    if (evRes.error) { $app.innerHTML = '<p class="error">' + escapeHtml(friendlyError(evRes.error)) + '</p>'; return; }
     tramos = trRes.data || [];
     artistsList = arRes.data || [];
     renderEventEditor(evRes.data);
@@ -460,6 +474,7 @@
       '<label>Estado<select name="status">' +
       '<option value="draft"' + (ev.status === 'draft' ? ' selected' : '') + '>Borrador (no se ve en la web)</option>' +
       '<option value="active"' + (ev.status === 'active' ? ' selected' : '') + '>Activo (portada de la web)</option>' +
+      '<option value="upcoming"' + (ev.status === 'upcoming' ? ' selected' : '') + '>Próximo evento (aparece en "Próximos eventos")</option>' +
       '<option value="past"' + (ev.status === 'past' ? ' selected' : '') + '>Pasado</option>' +
       '</select></label>' +
       '<label>Foto de portada<input type="file" id="hero-file" accept="image/*">' +
@@ -486,7 +501,7 @@
       msg.className = '';
       var path = ev.id + '/' + Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       var upRes = await sb.storage.from('event-images').upload(path, file, { upsert: true });
-      if (upRes.error) { msg.textContent = 'Error subiendo imagen: ' + upRes.error.message; msg.className = 'error'; return; }
+      if (upRes.error) { msg.textContent = 'No se pudo subir la imagen. ' + friendlyError(upRes.error); msg.className = 'error'; return; }
       form.querySelector('input[name="hero_image_url"]').value = path;
       form.querySelector('#hero-preview').innerHTML = '<img src="' + attr(publicUrlFor(path)) + '" alt="">';
       msg.textContent = 'Imagen subida. Recuerda pulsar "Guardar evento".';
@@ -513,8 +528,7 @@
       var msg = form.querySelector('#event-save-msg');
       var res = await sb.from('events').update(payload).eq('id', ev.id);
       if (res.error) {
-        var extra = res.error.message.indexOf('one_active_event') !== -1 ? ' (ya hay otro evento marcado como Activo — solo puede haber uno a la vez).' : '';
-        msg.textContent = 'Error: ' + res.error.message + extra;
+        msg.textContent = friendlyError(res.error);
         msg.className = 'error';
         return;
       }
@@ -525,7 +539,7 @@
     form.querySelector('#delete-event-btn').addEventListener('click', async function () {
       if (!confirm('¿Eliminar este evento y todos sus tramos/artistas? Esto no se puede deshacer.')) return;
       var res = await sb.from('events').delete().eq('id', ev.id);
-      if (res.error) return alert('Error: ' + res.error.message);
+      if (res.error) return alert(friendlyError(res.error));
       renderEventsList();
     });
 
@@ -567,7 +581,7 @@
           if (t.id && !confirm('¿Eliminar este tramo?')) return;
           if (t.id) {
             var res = await sb.from('ticket_tramos').delete().eq('id', t.id);
-            if (res.error) return alert('Error: ' + res.error.message);
+            if (res.error) return alert(friendlyError(res.error));
           }
           tramos.splice(i, 1);
           renderRows();
@@ -591,7 +605,7 @@
     saveBtn.addEventListener('click', async function () {
       var upserts = tramos.map(function (t, i) { return Object.assign({}, t, { event_id: eventId, position: i + 1 }); });
       var res = await sb.from('ticket_tramos').upsert(upserts).select();
-      if (res.error) { msg.textContent = 'Error: ' + res.error.message; msg.className = 'error'; return; }
+      if (res.error) { msg.textContent = friendlyError(res.error); msg.className = 'error'; return; }
       tramos = res.data.sort(function (a, b) { return a.position - b.position; });
       renderRows();
       msg.textContent = 'Tramos guardados.';
@@ -628,7 +642,7 @@
           if (a.id && !confirm('¿Eliminar este artista?')) return;
           if (a.id) {
             var res = await sb.from('artists').delete().eq('id', a.id);
-            if (res.error) return alert('Error: ' + res.error.message);
+            if (res.error) return alert(friendlyError(res.error));
           }
           artistsList.splice(i, 1);
           renderRows();
@@ -652,7 +666,7 @@
     saveBtn.addEventListener('click', async function () {
       var upserts = artistsList.map(function (a, i) { return Object.assign({}, a, { event_id: eventId, position: i + 1 }); });
       var res = await sb.from('artists').upsert(upserts).select();
-      if (res.error) { msg.textContent = 'Error: ' + res.error.message; msg.className = 'error'; return; }
+      if (res.error) { msg.textContent = friendlyError(res.error); msg.className = 'error'; return; }
       artistsList = res.data.sort(function (a, b) { return a.position - b.position; });
       renderRows();
       msg.textContent = 'Line-up guardado.';
